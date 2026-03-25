@@ -1,0 +1,117 @@
+@model List<OrgYonetimi.Models.Satis>
+@{
+  ViewData["Title"] = "Satışlar";
+  var toplamTutar = Model.Where(s => s.Durum != "iptal").Sum(s => s.ToplamTutar);
+  var teslimEdilen = Model.Where(s => s.Durum == "teslim_edildi").Sum(s => s.ToplamTutar);
+  var bekleyen = Model.Where(s => s.Durum == "beklemede" || s.Durum == "onaylandi").Sum(s => s.ToplamTutar);
+}
+
+<div class="section-header">
+  <div>
+    <h2>Satışlar</h2>
+    <div class="section-sub">Toplam @Model.Count satış kaydı</div>
+  </div>
+  <a class="btn-primary" href="/Satis/Ekle">+ Yeni Satış</a>
+</div>
+
+<!-- Özet Kartları -->
+<div class="g3" style="margin-bottom:1.5rem">
+  <div class="metric-card">
+    <div class="mc-label">Toplam Satış</div>
+    <div class="mc-value" style="color:var(--green)">@toplamTutar.ToString("N0") ₺</div>
+  </div>
+  <div class="metric-card">
+    <div class="mc-label">Teslim Edilen</div>
+    <div class="mc-value" style="color:var(--accent)">@teslimEdilen.ToString("N0") ₺</div>
+  </div>
+  <div class="metric-card">
+    <div class="mc-label">Bekleyen</div>
+    <div class="mc-value" style="color:var(--yellow)">@bekleyen.ToString("N0") ₺</div>
+  </div>
+</div>
+
+<div class="card">
+  @if (Model.Any())
+  {
+    <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>Tarih</th>
+            <th>Ürün/Hizmet</th>
+            <th>Tip</th>
+            <th>Müşteri Firma</th>
+            <th>Temsilci</th>
+            <th>Miktar</th>
+            <th>Tutar</th>
+            <th>Fatura No</th>
+            <th>Durum</th>
+            <th>İşlem</th>
+          </tr>
+        </thead>
+        <tbody>
+          @foreach (var s in Model)
+          {
+            var durumClass = s.Durum == "teslim_edildi" ? "t-green" : s.Durum == "beklemede" ? "t-yellow" : s.Durum == "onaylandi" ? "t-blue" : "t-red";
+            var durumText = s.Durum == "teslim_edildi" ? "Teslim Edildi" : s.Durum == "beklemede" ? "Beklemede" : s.Durum == "onaylandi" ? "Onaylandı" : "İptal";
+            var tipTag = s.StokKarti.Tip == "urun" ? "t-blue" : "t-purple";
+            var tipText = s.StokKarti.Tip == "urun" ? "Ürün" : "Hizmet";
+            <tr>
+              <td>@s.Tarih.ToString("dd.MM.yyyy")</td>
+              <td style="font-weight:600;color:var(--text0)">
+                @s.StokKarti.Ad
+                @if (!string.IsNullOrEmpty(s.Aciklama))
+                {
+                  <div style="font-size:0.75rem;color:var(--text2);font-weight:400;margin-top:2px">@s.Aciklama</div>
+                }
+              </td>
+              <td><span class="tag @tipTag">@tipText</span></td>
+              <td>@s.MusteriFirma.Ad</td>
+              <td>@(s.TemsilciFirma?.Ad ?? "-")</td>
+              <td style="font-weight:600">@s.Miktar @s.Birim</td>
+              <td style="font-weight:600;color:var(--gold)">@s.ToplamTutar.ToString("N0") ₺</td>
+              <td style="font-family:monospace;font-size:0.85rem">@(s.FaturaNo ?? "-")</td>
+              <td><span class="tag @durumClass">@durumText</span></td>
+              <td>
+                <div style="display:flex;gap:4px;flex-wrap:wrap">
+                  <a class="btn-sm" style="background:var(--bg2);color:var(--text0)" href="/Satis/Detay/@s.Id">Detay</a>
+                  @if (s.Durum == "beklemede")
+                  {
+                    <form asp-action="DurumGuncelle" method="post" style="margin:0">
+                      @Html.AntiForgeryToken()
+                      <input type="hidden" name="id" value="@s.Id" />
+                      <input type="hidden" name="durum" value="onaylandi" />
+                      <button class="btn-sm" style="background:var(--blue);color:#fff" type="submit">Onayla</button>
+                    </form>
+                  }
+                  @if (s.Durum == "onaylandi")
+                  {
+                    <form asp-action="DurumGuncelle" method="post" style="margin:0">
+                      @Html.AntiForgeryToken()
+                      <input type="hidden" name="id" value="@s.Id" />
+                      <input type="hidden" name="durum" value="teslim_edildi" />
+                      <button class="btn-sm green" type="submit">Teslim Et</button>
+                    </form>
+                  }
+                  @if (s.Durum != "iptal" && s.Durum != "teslim_edildi")
+                  {
+                    <form asp-action="DurumGuncelle" method="post" style="margin:0">
+                      @Html.AntiForgeryToken()
+                      <input type="hidden" name="id" value="@s.Id" />
+                      <input type="hidden" name="durum" value="iptal" />
+                      <button class="btn-sm red" type="submit">İptal</button>
+                    </form>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+  else
+  {
+    <div class="empty-state">Henüz satış kaydı yok</div>
+  }
+</div>

@@ -1,0 +1,53 @@
+@model List<Project>
+@{ ViewData["Title"] = "Projeler"; }
+
+<div class="section-header">
+  <div>
+    <h2>Projeler</h2>
+    <div class="section-sub">@Model.Count proje</div>
+  </div>
+  @if (User.IsInRole("Admin") || User.IsInRole("Yonetici"))
+  {
+    <a class="btn-primary" href="/Projeler/Ekle">+ Yeni Proje</a>
+  }
+</div>
+
+@if (Model.Any())
+{
+  <div class="g3">
+    @foreach (var p in Model)
+    {
+      var total = p.Gorevler.Count;
+      var done = p.Gorevler.Count(g => g.Durum == "tamamlandi");
+      var pct = total > 0 ? (done * 100 / total) : 0;
+      var statusClass = p.Durum == "aktif" ? "status-devam" : p.Durum == "tamamlandi" ? "status-tamamlandi" : p.Durum == "beklemede" ? "status-bekliyor" : "status-gecikti";
+      <div class="project-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+          <div class="p-title">@p.Ad</div>
+          <span class="tag @statusClass" style="flex-shrink:0">@p.Durum</span>
+        </div>
+        <div class="p-desc">@(p.Aciklama ?? "Açıklama yok")</div>
+        <div class="prog-track" style="margin-bottom:8px"><div class="prog-fill" style="width:@(pct)%;background:var(--accent)"></div></div>
+        <div class="p-meta">
+          <span>@done/@total görev</span>
+          <span>Yönetici: @p.Yonetici.FullName</span>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:6px">
+          <a class="btn-sm blue" href="/Projeler/Detay/@p.Id">Detay</a>
+          @if (User.IsInRole("Admin") || User.IsInRole("Yonetici"))
+          {
+            <a class="btn-sm blue" href="/Projeler/Duzenle/@p.Id">Düzenle</a>
+            <form asp-action="Sil" asp-route-id="@p.Id" method="post" style="display:inline" onsubmit="return confirm('Projeyi silmek istediğinize emin misiniz?')">
+              @Html.AntiForgeryToken()
+              <button class="btn-sm red" type="submit">Sil</button>
+            </form>
+          }
+        </div>
+      </div>
+    }
+  </div>
+}
+else
+{
+  <div class="empty-state">Henüz proje oluşturulmamış</div>
+}

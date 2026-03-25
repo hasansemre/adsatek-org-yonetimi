@@ -1,0 +1,155 @@
+@model OrgYonetimi.Models.Tedarik
+@{ ViewData["Title"] = "Tedarik Detay"; }
+
+<div class="section-header">
+  <div>
+    <h2>Tedarik Detay</h2>
+    <div class="section-sub">#@Model.Id - @Model.StokKarti.Ad</div>
+  </div>
+  <a class="btn-outline" href="/Tedarik">← Geri Dön</a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+  <div style="background:rgba(16,185,129,0.1);border:1px solid var(--green);color:var(--green);padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem">
+    @TempData["Success"]
+  </div>
+}
+
+@{
+  var durumClass = Model.Durum switch
+  {
+    "beklemede" => "t-yellow",
+    "onaylandi" => "t-blue",
+    "teslim_alindi" => "t-green",
+    "iptal" => "t-red",
+    _ => "t-gray"
+  };
+  var durumText = Model.Durum switch
+  {
+    "beklemede" => "Beklemede",
+    "onaylandi" => "Onaylandı",
+    "teslim_alindi" => "Teslim Alındı",
+    "iptal" => "İptal",
+    _ => Model.Durum
+  };
+}
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem">
+  <div class="metric-card">
+    <div class="metric-label">Ürün/Hizmet</div>
+    <div class="metric-value" style="font-size:1.1rem">@Model.StokKarti.Ad</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">Durum</div>
+    <div class="metric-value"><span class="tag @durumClass" style="font-size:1rem">@durumText</span></div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">Toplam Tutar</div>
+    <div class="metric-value" style="font-size:1.2rem;color:var(--gold)">@Model.ToplamTutar.ToString("N2") @Model.ParaBirimi</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">Tarih</div>
+    <div class="metric-value" style="font-size:1.1rem">@Model.Tarih.ToString("dd.MM.yyyy")</div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem">
+  <div class="card">
+    <h3 style="margin-bottom:1rem;color:var(--text1)">Tedarik Bilgileri</h3>
+    <div style="display:grid;gap:0.6rem">
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:var(--text2)">Miktar:</span>
+        <span style="color:var(--text0);font-weight:600">@((int)Model.Miktar) @Model.Birim</span>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:var(--text2)">Birim Fiyat:</span>
+        <span style="color:var(--text0)">@Model.BirimFiyat.ToString("N2") @Model.ParaBirimi</span>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:var(--text2)">Fatura No:</span>
+        <span style="color:var(--text0)">@(Model.FaturaNo ?? "-")</span>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:var(--text2)">Proje:</span>
+        <span style="color:var(--text0)">@(Model.Project?.Ad ?? "-")</span>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:var(--text2)">Oluşturan:</span>
+        <span style="color:var(--text0)">@Model.Olusturan.FullName</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-bottom:1rem;color:var(--text1)">Firma Bilgileri</h3>
+    <div style="display:grid;gap:0.6rem">
+      <div>
+        <div style="color:var(--text2);font-size:0.85rem;margin-bottom:0.2rem">Tedarikçi Firma</div>
+        <div style="color:var(--text0);font-weight:600">@Model.TedarikFirma.Ad</div>
+        @if (!string.IsNullOrEmpty(Model.TedarikFirma.YetkiliKisi))
+        {
+          <div style="color:var(--text2);font-size:0.85rem">Yetkili: @Model.TedarikFirma.YetkiliKisi</div>
+        }
+      </div>
+      @if (Model.TemsilciFirma != null)
+      {
+        <div style="border-top:1px solid var(--bg2);padding-top:0.6rem">
+          <div style="color:var(--text2);font-size:0.85rem;margin-bottom:0.2rem">Temsilci Firma</div>
+          <div style="color:var(--text0);font-weight:600">@Model.TemsilciFirma.Ad</div>
+          @if (!string.IsNullOrEmpty(Model.TemsilciFirma.YetkiliKisi))
+          {
+            <div style="color:var(--text2);font-size:0.85rem">Yetkili: @Model.TemsilciFirma.YetkiliKisi</div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Aciklama))
+{
+  <div class="card" style="margin-bottom:1.5rem">
+    <h3 style="margin-bottom:0.5rem;color:var(--text1)">Açıklama</h3>
+    <p style="color:var(--text2);margin:0">@Model.Aciklama</p>
+  </div>
+}
+
+@if (Model.Durum != "iptal" && Model.Durum != "teslim_alindi")
+{
+  <div class="card">
+    <h3 style="margin-bottom:1rem;color:var(--text1)">Durum Güncelle</h3>
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+      @if (Model.Durum == "beklemede")
+      {
+        <form method="post" action="/Tedarik/DurumGuncelle" style="display:inline">
+          @Html.AntiForgeryToken()
+          <input type="hidden" name="id" value="@Model.Id" />
+          <input type="hidden" name="durum" value="onaylandi" />
+          <button class="btn-primary">Onayla</button>
+        </form>
+        <form method="post" action="/Tedarik/DurumGuncelle" style="display:inline">
+          @Html.AntiForgeryToken()
+          <input type="hidden" name="id" value="@Model.Id" />
+          <input type="hidden" name="durum" value="iptal" />
+          <button class="btn-sm btn-danger" onclick="return confirm('Bu tedariki iptal etmek istediğinize emin misiniz?')">İptal Et</button>
+        </form>
+      }
+      @if (Model.Durum == "onaylandi")
+      {
+        <form method="post" action="/Tedarik/DurumGuncelle" style="display:inline">
+          @Html.AntiForgeryToken()
+          <input type="hidden" name="id" value="@Model.Id" />
+          <input type="hidden" name="durum" value="teslim_alindi" />
+          <button class="btn-primary">Teslim Alındı</button>
+        </form>
+        <form method="post" action="/Tedarik/DurumGuncelle" style="display:inline">
+          @Html.AntiForgeryToken()
+          <input type="hidden" name="id" value="@Model.Id" />
+          <input type="hidden" name="durum" value="iptal" />
+          <button class="btn-sm btn-danger" onclick="return confirm('Bu tedariki iptal etmek istediğinize emin misiniz?')">İptal Et</button>
+        </form>
+      }
+    </div>
+  </div>
+}

@@ -1,0 +1,38 @@
+@model DepartmentViewModel
+@{ ViewData["Title"] = "Departman Düzenle"; var departments = ViewBag.Departments as List<Department>; }
+
+<div style="max-width:480px">
+  <div class="section-header">
+    <h2>Departman Düzenle</h2>
+    <a class="btn-outline" href="/Departmanlar">Geri Dön</a>
+  </div>
+
+  <div class="card">
+    <form asp-action="Duzenle" asp-route-id="@Model.Id" method="post">
+      @Html.AntiForgeryToken()
+      <div class="f-group">
+        <label class="f-label">Departman Adı</label>
+        <input asp-for="Ad" class="f-input" />
+        <span asp-validation-for="Ad" class="error-msg" style="margin-top:4px"></span>
+      </div>
+      <div class="f-group">
+        <label class="f-label">Açıklama</label>
+        <textarea asp-for="Aciklama" class="f-input"></textarea>
+      </div>
+      <div class="f-group">
+        <label class="f-label">Üst Departman</label>
+        <select asp-for="UstDepartmanId" class="f-input">
+          <option value="">-- Yok (Kök Departman) --</option>
+          @if (departments != null)
+          {
+            @foreach (var d in departments)
+            {
+              <option value="@d.Id" selected="@(d.Id == Model.UstDepartmanId)">@d.Ad</option>
+            }
+          }
+        </select>
+      </div>
+      <button type="submit" class="btn-primary">Güncelle</button>
+    </form>
+  </div>
+</div>

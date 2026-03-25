@@ -1,0 +1,53 @@
+@model UserEditViewModel
+@{ ViewData["Title"] = "Kullanıcı Düzenle"; var departments = ViewBag.Departments as List<Department>; }
+
+<div style="max-width:480px">
+  <div class="section-header">
+    <h2>Kullanıcı Düzenle</h2>
+    <a class="btn-outline" href="/Kullanicilar">Geri Dön</a>
+  </div>
+
+  <div asp-validation-summary="All" class="error-msg"></div>
+
+  <div class="card">
+    <form asp-action="Duzenle" method="post">
+      @Html.AntiForgeryToken()
+      <input type="hidden" asp-for="Id" />
+      <div class="f-group">
+        <label class="f-label">Ad Soyad</label>
+        <input asp-for="FullName" class="f-input" />
+      </div>
+      <div class="f-group">
+        <label class="f-label">E-Posta</label>
+        <input asp-for="Email" class="f-input" type="email" />
+      </div>
+      <div class="f-group">
+        <label class="f-label">Rol</label>
+        <select asp-for="Role" class="f-input">
+          <option value="Admin">Admin</option>
+          <option value="Yonetici">Yonetici</option>
+          <option value="Calisan">Calisan</option>
+        </select>
+      </div>
+      <div class="f-group">
+        <label class="f-label">Departman</label>
+        <select asp-for="DepartmentId" class="f-input">
+          <option value="">-- Seçiniz --</option>
+          @if (departments != null)
+          {
+            @foreach (var d in departments)
+            {
+              <option value="@d.Id" selected="@(d.Id == Model.DepartmentId)">@d.Ad</option>
+            }
+          }
+        </select>
+      </div>
+      <div class="f-group">
+        <label class="f-label" style="display:inline">
+          <input type="checkbox" asp-for="IsActive" /> Aktif
+        </label>
+      </div>
+      <button type="submit" class="btn-primary">Güncelle</button>
+    </form>
+  </div>
+</div>

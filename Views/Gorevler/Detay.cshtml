@@ -1,0 +1,306 @@
+@model GorevItem
+@using OrgYonetimi.Models
+@{
+  ViewData["Title"] = Model.Baslik;
+  var asamaLabel = new Dictionary<string, string> {
+    {"isleme_alindi", "İşleme Alındı"},
+    {"tamamlandi", "Tamamlandı"},
+    {"reddedildi", "Reddedildi"}
+  };
+  var gorevDosyalar = Model.Dosyalar.Where(d => d.GorevAsamaId == null).ToList();
+  var stokluUrunler = (List<StokKarti>?)ViewBag.StokluUrunler ?? new List<StokKarti>();
+  var temsilciFirmalar = (List<Firma>?)ViewBag.TemsilciFirmalar ?? new List<Firma>();
+}
+
+<div class="section-header">
+  <div>
+    <h2>Görev Detayı</h2>
+    <div class="section-sub">#@Model.Id</div>
+  </div>
+  <a class="btn-outline" href="/Gorevler">Geri Dön</a>
+</div>
+
+<div class="detay-grid">
+  <!-- Sol: Görev bilgileri -->
+  <div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-head">Görev Bilgileri</div>
+
+      <div class="detay-row">
+        <span class="detay-label">Başlık</span>
+        <span class="detay-value" style="font-weight:600;color:var(--text0)">@Model.Baslik</span>
+      </div>
+
+      @if (!string.IsNullOrEmpty(Model.Aciklama))
+      {
+        <div class="detay-row">
+          <span class="detay-label">Açıklama</span>
+          <span class="detay-value">@Model.Aciklama</span>
+        </div>
+      }
+
+      <div class="detay-row">
+        <span class="detay-label">Durum</span>
+        <span class="detay-value"><span class="tag status-@Model.Durum">@Model.Durum</span></span>
+      </div>
+
+      <div class="detay-row">
+        <span class="detay-label">Öncelik</span>
+        <span class="detay-value"><span class="priority-@Model.Oncelik" style="font-weight:600">@Model.Oncelik</span></span>
+      </div>
+
+      <div class="detay-row">
+        <span class="detay-label">Proje</span>
+        <span class="detay-value">
+          @if (Model.Project != null)
+          {
+            <a href="/Projeler/Detay/@Model.ProjectId" style="color:var(--accent2);text-decoration:none">@Model.Project.Ad</a>
+          }
+          else
+          {
+            <span style="color:var(--text3)">Bağımsız Görev</span>
+          }
+        </span>
+      </div>
+
+      <div class="detay-row">
+        <span class="detay-label">Atanan</span>
+        <span class="detay-value">@(Model.AtananKullanici?.FullName ?? "-")</span>
+      </div>
+
+      <div class="detay-row">
+        <span class="detay-label">Oluşturan</span>
+        <span class="detay-value">@Model.Olusturan.FullName</span>
+      </div>
+
+      <div class="detay-row">
+        <span class="detay-label">Oluşturulma</span>
+        <span class="detay-value">@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</span>
+      </div>
+
+      <div class="detay-row">
+        <span class="detay-label">Son Tarih</span>
+        <span class="detay-value">@(Model.SonTarih?.ToString("dd.MM.yyyy") ?? "-")</span>
+      </div>
+
+      @if (Model.TamamlanmaTarihi.HasValue)
+      {
+        <div class="detay-row">
+          <span class="detay-label">Tamamlanma</span>
+          <span class="detay-value">@Model.TamamlanmaTarihi.Value.ToString("dd.MM.yyyy HH:mm")</span>
+        </div>
+      }
+    </div>
+
+    @if (gorevDosyalar.Any())
+    {
+      <div class="card">
+        <div class="card-head">Ekli Dosyalar</div>
+        <div class="dosya-list">
+          @foreach (var d in gorevDosyalar)
+          {
+            <div class="dosya-item">
+              <div class="dosya-icon @d.DosyaTipi">
+                @if (d.DosyaTipi == "image")
+                {
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="1" y="2" width="14" height="12" rx="1.5"/><circle cx="5" cy="6" r="1.5"/><path d="M1 12l4-4 3 3 2-2 5 5"/></svg>
+                }
+                else if (d.DosyaTipi == "pdf")
+                {
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M4 1h6l4 4v10H4z"/><path d="M10 1v4h4"/><text x="5" y="12" font-size="5" fill="currentColor" stroke="none" font-weight="bold">PDF</text></svg>
+                }
+                else
+                {
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M4 1h6l4 4v10H4z"/><path d="M10 1v4h4"/><path d="M6 8h6M6 10.5h4"/></svg>
+                }
+              </div>
+              <div class="dosya-info">
+                <a href="@d.DosyaYolu" target="_blank" class="dosya-name">@d.DosyaAdi</a>
+                <span class="dosya-meta">@FormatSize(d.DosyaBoyutu) · @d.YukleyenKullanici.FullName</span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Sağ: Aşama geçmişi + form -->
+  <div>
+    @if (Model.Durum != "tamamlandi" && Model.Durum != "reddedildi")
+    {
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-head">Aşama Değiştir</div>
+        <form asp-action="AsamaEkle" method="post" enctype="multipart/form-data">
+          @Html.AntiForgeryToken()
+          <input type="hidden" name="gorevId" value="@Model.Id" />
+          <div class="f-group">
+            <label class="f-label">Aşama</label>
+            <select name="asama" class="f-input">
+              @if (Model.Durum == "bekliyor")
+              {
+                <option value="isleme_alindi">İşleme Alındı</option>
+                <option value="reddedildi">Reddedildi</option>
+              }
+              else
+              {
+                <option value="tamamlandi">Tamamlandı</option>
+                <option value="reddedildi">Reddedildi</option>
+              }
+            </select>
+          </div>
+          <div class="f-group">
+            <label class="f-label">Not (İsteğe bağlı)</label>
+            <textarea name="not" class="f-input" rows="3" placeholder="Açıklama ekleyin..."></textarea>
+          </div>
+          <div class="f-group">
+            <label class="f-label">Dosya Ekle (İsteğe bağlı)</label>
+            <input type="file" name="dosyalar" class="f-input" multiple accept=".jpg,.jpeg,.png,.gif,.bmp,.webp,.svg,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp" />
+            <span style="font-size:10px;color:var(--text3);margin-top:4px;display:block">Görsel, PDF veya Office dosyaları (maks. 10MB)</span>
+          </div>
+          <button type="submit" class="btn-primary" style="width:100%">Aşama Kaydet</button>
+        </form>
+      </div>
+    }
+
+    <div class="card">
+      <div class="card-head">Aşama Geçmişi</div>
+      @if (Model.Asamalar.Any())
+      {
+        <div class="timeline">
+          @foreach (var a in Model.Asamalar)
+          {
+            var cls = a.Asama == "tamamlandi" ? "tl-green" : a.Asama == "reddedildi" ? "tl-red" : "tl-blue";
+            var asamaDosyalar = a.Dosyalar ?? new List<GorevDosya>();
+            <div class="tl-item @cls">
+              <div class="tl-dot"></div>
+              <div class="tl-content">
+                <div class="tl-header">
+                  <span class="tl-asama">@(asamaLabel.ContainsKey(a.Asama) ? asamaLabel[a.Asama] : a.Asama)</span>
+                  <span class="tl-date">@a.CreatedAt.ToString("dd.MM.yyyy HH:mm")</span>
+                </div>
+                <div class="tl-user">@a.YapanKullanici.FullName</div>
+                @if (!string.IsNullOrEmpty(a.Not))
+                {
+                  <div class="tl-note">@a.Not</div>
+                }
+                @if (asamaDosyalar.Any())
+                {
+                  <div class="tl-dosyalar">
+                    @foreach (var d in asamaDosyalar)
+                    {
+                      <a href="@d.DosyaYolu" target="_blank" class="tl-dosya-link">
+                        <span class="tl-dosya-icon @d.DosyaTipi"></span>
+                        @d.DosyaAdi
+                      </a>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+      else
+      {
+        <div class="empty-state">Henüz aşama kaydı yok</div>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- Stok Kullanım Bölümü -->
+<div style="margin-top:1.5rem">
+  @if (Model.Durum != "tamamlandi" && stokluUrunler.Any())
+  {
+    <div class="card" style="margin-bottom:1rem">
+      <div class="card-head">📦 Stoktan Malzeme Kullan</div>
+      @if (TempData["Error"] != null)
+      {
+        <div style="background:rgba(239,68,68,0.15);color:var(--red);padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:0.9rem">@TempData["Error"]</div>
+      }
+      @if (TempData["Success"] != null)
+      {
+        <div style="background:rgba(34,197,94,0.15);color:var(--green);padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:0.9rem">@TempData["Success"]</div>
+      }
+      <form asp-action="StokKullan" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="gorevId" value="@Model.Id" />
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
+          <div class="f-group">
+            <label class="f-label">Ürün</label>
+            <select name="stokKartiId" class="f-input" required>
+              <option value="">-- Ürün Seçin --</option>
+              @foreach (var u in stokluUrunler)
+              {
+                <option value="@u.Id">@u.Ad (@u.Birim)</option>
+              }
+            </select>
+          </div>
+          <div class="f-group">
+            <label class="f-label">Temsilci Firma (Opsiyonel)</label>
+            <select name="temsilciFirmaId" class="f-input">
+              <option value="">-- Tüm stoktan --</option>
+              @foreach (var f in temsilciFirmalar)
+              {
+                <option value="@f.Id">@f.Ad</option>
+              }
+            </select>
+          </div>
+          <div class="f-group">
+            <label class="f-label">Miktar</label>
+            <input type="number" name="miktar" class="f-input" step="1" min="1" required placeholder="Miktar" />
+          </div>
+          <div class="f-group">
+            <label class="f-label">Açıklama (Opsiyonel)</label>
+            <input type="text" name="aciklama" class="f-input" placeholder="Kullanım açıklaması..." />
+          </div>
+        </div>
+        <button type="submit" class="btn-primary" style="width:100%;margin-top:0.5rem">Stok Kullan</button>
+      </form>
+    </div>
+  }
+
+  @if (Model.StokKullanimlari.Any())
+  {
+    <div class="card">
+      <div class="card-head">📦 Kullanılan Malzemeler</div>
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>Tarih</th>
+            <th>Ürün</th>
+            <th>Temsilci</th>
+            <th>Miktar</th>
+            <th>Açıklama</th>
+            <th>Kullanan</th>
+          </tr>
+        </thead>
+        <tbody>
+          @foreach (var k in Model.StokKullanimlari)
+          {
+            <tr>
+              <td>@k.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+              <td style="font-weight:600;color:var(--text0)">
+                <a href="/Stok/Detay/@k.StokKartiId" style="color:var(--accent);text-decoration:none">@k.StokKarti.Ad</a>
+              </td>
+              <td>@(k.TemsilciFirma?.Ad ?? "-")</td>
+              <td style="font-weight:600;color:var(--red)">-@((int)k.Miktar) @k.StokKarti.Birim</td>
+              <td style="color:var(--text2);font-size:0.85rem">@(k.Aciklama ?? "-")</td>
+              <td>@k.Kullanan.FullName</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+@functions {
+  string FormatSize(long bytes)
+  {
+    if (bytes < 1024) return $"{bytes} B";
+    if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
+    return $"{bytes / (1024.0 * 1024.0):F1} MB";
+  }
+}

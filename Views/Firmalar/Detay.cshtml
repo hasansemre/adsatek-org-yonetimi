@@ -1,0 +1,170 @@
+@model OrgYonetimi.Models.Firma
+@{
+  ViewData["Title"] = Model.Ad;
+  var tedarikler = ViewBag.Tedarikler as List<OrgYonetimi.Models.Tedarik> ?? new();
+  var toplamHarcama = (decimal)(ViewBag.ToplamHarcama ?? 0m);
+  var bekleyenTutar = (decimal)(ViewBag.BekleyenTutar ?? 0m);
+  var tipClass = Model.Tip == "temsilci" ? "t-blue" : "t-green";
+  var tipText = Model.Tip == "temsilci" ? "Temsilci" : "Tedarikçi";
+}
+
+<div class="section-header">
+  <div>
+    <h2>@Model.Ad</h2>
+    <div class="section-sub"><span class="tag @tipClass">@tipText</span></div>
+  </div>
+  <div style="display:flex;gap:0.5rem">
+    @if (User.IsInRole("Admin") || User.IsInRole("Yonetici"))
+    {
+      <a class="btn-primary" href="/Firmalar/Duzenle/@Model.Id">Düzenle</a>
+    }
+    <a class="btn-outline" href="/Firmalar">← Firmalar</a>
+  </div>
+</div>
+
+<!-- Firma Bilgileri -->
+<div class="g2" style="margin-bottom:1.5rem">
+  <div class="card">
+    <div class="card-head">Firma Bilgileri</div>
+    <div style="display:grid;gap:0.8rem;padding-top:0.3rem">
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:var(--text2)">Yetkili Kişi</span>
+        <span style="color:var(--text0);font-weight:600">@(Model.YetkiliKisi ?? "-")</span>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:var(--text2)">Telefon</span>
+        <span style="color:var(--text0)">@(Model.Telefon ?? "-")</span>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:var(--text2)">E-posta</span>
+        <span style="color:var(--text0)">@(Model.Email ?? "-")</span>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:var(--text2)">Vergi No</span>
+        <span style="color:var(--text0)">@(Model.VergiNo ?? "-")</span>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:var(--text2)">Adres</span>
+        <span style="color:var(--text0);text-align:right;max-width:60%">@(Model.Adres ?? "-")</span>
+      </div>
+      @if (!string.IsNullOrEmpty(Model.Aciklama))
+      {
+        <div style="border-top:1px solid var(--bg2);padding-top:0.5rem">
+          <span style="color:var(--text2);display:block;margin-bottom:4px">Açıklama</span>
+          <span style="color:var(--text1);font-size:0.9rem">@Model.Aciklama</span>
+        </div>
+      }
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:var(--text2)">Durum</span>
+        <span class="tag @(Model.IsActive ? "t-green" : "t-red")">@(Model.IsActive ? "Aktif" : "Pasif")</span>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:var(--text2)">Kayıt Tarihi</span>
+        <span style="color:var(--text1)">@Model.CreatedAt.ToString("dd.MM.yyyy")</span>
+      </div>
+    </div>
+  </div>
+
+  @if (User.IsInRole("Admin"))
+  {
+  <div class="card">
+    <div class="card-head">Finansal Özet</div>
+    <div style="display:grid;gap:1rem;padding-top:0.3rem">
+      <div style="background:var(--bg1);border-radius:8px;padding:1rem;border-left:3px solid var(--green)">
+        <div style="color:var(--text2);font-size:0.85rem;margin-bottom:4px">Toplam Harcama (Teslim Alınan)</div>
+        <div style="color:var(--green);font-weight:700;font-size:1.3rem">@toplamHarcama.ToString("N0") ₺</div>
+      </div>
+      @if (bekleyenTutar > 0)
+      {
+        <div style="background:var(--bg1);border-radius:8px;padding:1rem;border-left:3px solid var(--yellow)">
+          <div style="color:var(--text2);font-size:0.85rem;margin-bottom:4px">Bekleyen Tutar</div>
+          <div style="color:var(--yellow);font-weight:700;font-size:1.3rem">@bekleyenTutar.ToString("N0") ₺</div>
+        </div>
+      }
+      <div style="background:var(--bg1);border-radius:8px;padding:1rem;border-left:3px solid var(--accent)">
+        <div style="color:var(--text2);font-size:0.85rem;margin-bottom:4px">Toplam İşlem</div>
+        <div style="color:var(--accent);font-weight:700;font-size:1.3rem">@tedarikler.Count adet</div>
+      </div>
+    </div>
+
+    @if (Model.Tip == "temsilci" && ViewBag.Stoklar != null)
+    {
+      var stoklar = (IEnumerable<dynamic>)ViewBag.Stoklar;
+      if (stoklar.Any())
+      {
+        <div style="margin-top:1rem;border-top:1px solid var(--bg2);padding-top:0.8rem">
+          <div style="color:var(--text2);font-size:0.85rem;margin-bottom:0.5rem;font-weight:600">Mevcut Stok</div>
+          @foreach (var s in stoklar)
+          {
+            <div style="display:flex;justify-content:space-between;padding:0.3rem 0">
+              <span style="color:var(--text1)">@s.UrunAdi</span>
+              <span style="color:var(--accent);font-weight:600">@s.Adet @s.Birim</span>
+            </div>
+          }
+        </div>
+      }
+    }
+  </div>
+  } <!-- /Admin Finansal Özet -->
+</div>
+
+@if (User.IsInRole("Admin"))
+{
+<!-- Tedarik Geçmişi -->
+<div class="card">
+  <div class="card-head">
+    Tedarik Geçmişi
+    <span style="color:var(--text2);font-weight:400;font-size:0.85rem">(@tedarikler.Count kayıt)</span>
+  </div>
+  @if (tedarikler.Any())
+  {
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>Tarih</th>
+          <th>Ürün/Hizmet</th>
+          <th>Proje</th>
+          <th>Miktar</th>
+          <th>Tutar</th>
+          <th>Durum</th>
+          @if (Model.Tip == "tedarikci")
+          {
+            <th>Temsilci</th>
+          }
+          else
+          {
+            <th>Tedarikçi</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @foreach (var t in tedarikler)
+        {
+          var durumClass = t.Durum == "teslim_alindi" ? "t-green" : t.Durum == "beklemede" ? "t-yellow" : t.Durum == "onaylandi" ? "t-blue" : "t-red";
+          var durumText = t.Durum == "teslim_alindi" ? "Teslim Alındı" : t.Durum == "beklemede" ? "Beklemede" : t.Durum == "onaylandi" ? "Onaylandı" : "İptal";
+          <tr>
+            <td>@t.Tarih.ToString("dd.MM.yyyy")</td>
+            <td style="font-weight:600;color:var(--text0)">@t.StokKarti.Ad</td>
+            <td>@(t.Project?.Ad ?? "-")</td>
+            <td>@((int)t.Miktar) @t.Birim</td>
+            <td style="font-weight:600;color:var(--gold)">@t.ToplamTutar.ToString("N0") ₺</td>
+            <td><span class="tag @durumClass">@durumText</span></td>
+            @if (Model.Tip == "tedarikci")
+            {
+              <td>@(t.TemsilciFirma?.Ad ?? "-")</td>
+            }
+            else
+            {
+              <td>@t.TedarikFirma.Ad</td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+  else
+  {
+    <div class="empty-state">Henüz tedarik kaydı yok</div>
+  }
+</div>
+} <!-- /Admin Tedarik Geçmişi -->

@@ -1,0 +1,111 @@
+@model List<GorevItem>
+@{
+  ViewData["Title"] = "Görevler";
+  var users = ViewBag.Users as List<AppUser>;
+  var projects = ViewBag.Projects as List<Project>;
+  var filter = ViewBag.Filter as GorevFilterModel;
+}
+
+<div class="section-header">
+  <div>
+    <h2>Görevler</h2>
+    <div class="section-sub">@Model.Count görev</div>
+  </div>
+  <a class="btn-primary" href="/Gorevler/Ekle">+ Yeni Görev</a>
+</div>
+
+@if (!User.IsInRole("Calisan"))
+{
+  <form method="get" class="filter-bar">
+    <select name="Durum">
+      <option value="">Tüm Durumlar</option>
+      <option value="bekliyor" selected="@(filter?.Durum == "bekliyor")">Bekliyor</option>
+      <option value="devam" selected="@(filter?.Durum == "devam")">Devam Ediyor</option>
+      <option value="tamamlandi" selected="@(filter?.Durum == "tamamlandi")">Tamamlandı</option>
+      <option value="gecikti" selected="@(filter?.Durum == "gecikti")">Gecikti</option>
+    </select>
+    <select name="Oncelik">
+      <option value="">Tüm Öncelikler</option>
+      <option value="kritik" selected="@(filter?.Oncelik == "kritik")">Kritik</option>
+      <option value="yuksek" selected="@(filter?.Oncelik == "yuksek")">Yüksek</option>
+      <option value="normal" selected="@(filter?.Oncelik == "normal")">Normal</option>
+      <option value="dusuk" selected="@(filter?.Oncelik == "dusuk")">Düşük</option>
+    </select>
+    <select name="ProjectId">
+      <option value="">Tüm Projeler</option>
+      @if (projects != null)
+      {
+        @foreach (var p in projects)
+        {
+          <option value="@p.Id" selected="@(filter?.ProjectId == p.Id)">@p.Ad</option>
+        }
+      }
+    </select>
+    <select name="AtananKullaniciId">
+      <option value="">Tüm Kullanıcılar</option>
+      @if (users != null)
+      {
+        @foreach (var u in users)
+        {
+          <option value="@u.Id" selected="@(filter?.AtananKullaniciId == u.Id)">@u.FullName</option>
+        }
+      }
+    </select>
+    <button type="submit" class="btn-outline">Filtrele</button>
+    <a class="btn-outline" href="/Gorevler">Temizle</a>
+  </form>
+}
+
+<div class="card">
+  @if (Model.Any())
+  {
+    <table class="tbl">
+      <thead><tr><th>Başlık</th><th>Proje</th><th>Durum</th><th>Öncelik</th><th>Atanan</th><th>Son Tarih</th><th></th></tr></thead>
+      <tbody>
+        @foreach (var g in Model)
+        {
+          <tr>
+            <td style="font-weight:600"><a href="/Gorevler/Detay/@g.Id" style="color:var(--text0);text-decoration:none" onmouseover="this.style.color='var(--accent2)'" onmouseout="this.style.color='var(--text0)'">@g.Baslik</a></td>
+            <td>
+              @if (g.Project != null)
+              {
+                <a href="/Projeler/Detay/@g.ProjectId" style="color:var(--accent2);text-decoration:none;font-size:11px">@g.Project.Ad</a>
+              }
+              else
+              {
+                <span style="color:var(--text3)">-</span>
+              }
+            </td>
+            <td><span class="tag status-@g.Durum">@g.Durum</span></td>
+            <td><span class="priority-@g.Oncelik" style="font-size:11px;font-weight:600">@g.Oncelik</span></td>
+            <td>@(g.AtananKullanici?.FullName ?? "-")</td>
+            <td>@(g.SonTarih?.ToString("dd.MM.yyyy") ?? "-")</td>
+            <td style="text-align:right;white-space:nowrap">
+              @if (g.Durum != "tamamlandi")
+              {
+                <form asp-action="DurumGuncelle" method="post" style="display:inline">
+                  @Html.AntiForgeryToken()
+                  <input type="hidden" name="id" value="@g.Id" />
+                  <input type="hidden" name="durum" value="@(g.Durum == "bekliyor" ? "devam" : "tamamlandi")" />
+                  <button class="btn-sm green" type="submit">@(g.Durum == "bekliyor" ? "Başla" : "Tamamla")</button>
+                </form>
+              }
+              @if (User.IsInRole("Admin") || User.IsInRole("Yonetici"))
+              {
+                <form asp-action="Sil" method="post" style="display:inline" onsubmit="return confirm('Görevi silmek istediğinize emin misiniz?')">
+                  @Html.AntiForgeryToken()
+                  <input type="hidden" name="id" value="@g.Id" />
+                  <button class="btn-sm red" type="submit">Sil</button>
+                </form>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+  else
+  {
+    <div class="empty-state">Görev bulunamadı</div>
+  }
+</div>

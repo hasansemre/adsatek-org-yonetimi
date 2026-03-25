@@ -1,0 +1,82 @@
+@model List<OrgYonetimi.Models.Tedarik>
+@{ ViewData["Title"] = "Tedarikler"; }
+
+<div class="section-header">
+  <div>
+    <h2>Tedarikler</h2>
+    <div class="section-sub">Ürün ve hizmet tedarik kayıtları</div>
+  </div>
+  <a class="btn-primary" href="/Tedarik/Ekle">+ Yeni Tedarik</a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+  <div class="alert-success" style="background:rgba(16,185,129,0.1);border:1px solid var(--green);color:var(--green);padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem">
+    @TempData["Success"]
+  </div>
+}
+
+<div class="card">
+  <table class="tbl">
+    <thead>
+      <tr>
+        <th>Tarih</th>
+        <th>Ürün/Hizmet</th>
+        <th>Tedarikçi</th>
+        <th>Temsilci</th>
+        <th>Proje</th>
+        <th>Miktar</th>
+        <th>Toplam Tutar</th>
+        <th>Durum</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @foreach (var t in Model)
+      {
+        var durumClass = t.Durum switch
+        {
+          "beklemede" => "t-yellow",
+          "onaylandi" => "t-blue",
+          "teslim_alindi" => "t-green",
+          "iptal" => "t-red",
+          _ => "t-gray"
+        };
+        var durumText = t.Durum switch
+        {
+          "beklemede" => "Beklemede",
+          "onaylandi" => "Onaylandı",
+          "teslim_alindi" => "Teslim Alındı",
+          "iptal" => "İptal",
+          _ => t.Durum
+        };
+        <tr>
+          <td>@t.Tarih.ToString("dd.MM.yyyy")</td>
+          <td style="font-weight:600;color:var(--text0)">@t.StokKarti.Ad</td>
+          <td>@t.TedarikFirma.Ad</td>
+          <td>@(t.TemsilciFirma?.Ad ?? "-")</td>
+          <td>
+            @if (t.Project != null)
+            {
+              <span class="tag t-blue">@t.Project.Ad</span>
+            }
+            else
+            {
+              <span style="color:var(--text3)">-</span>
+            }
+          </td>
+          <td>@((int)t.Miktar) @t.Birim</td>
+          <td style="font-weight:600;color:var(--gold)">@t.ToplamTutar.ToString("N2") @t.ParaBirimi</td>
+          <td><span class="tag @durumClass">@durumText</span></td>
+          <td style="text-align:right">
+            <a class="btn-sm btn-outline" href="/Tedarik/Detay/@t.Id">Detay</a>
+          </td>
+        </tr>
+      }
+      @if (!Model.Any())
+      {
+        <tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text2)">Henüz tedarik kaydı eklenmemiş</td></tr>
+      }
+    </tbody>
+  </table>
+</div>

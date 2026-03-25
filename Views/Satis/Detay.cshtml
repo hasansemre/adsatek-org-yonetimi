@@ -1,0 +1,103 @@
+@model OrgYonetimi.Models.Satis
+@{
+  ViewData["Title"] = "Satış Detayı";
+  var durumClass = Model.Durum == "teslim_edildi" ? "t-green" : Model.Durum == "beklemede" ? "t-yellow" : Model.Durum == "onaylandi" ? "t-blue" : "t-red";
+  var durumText = Model.Durum == "teslim_edildi" ? "Teslim Edildi" : Model.Durum == "beklemede" ? "Beklemede" : Model.Durum == "onaylandi" ? "Onaylandı" : "İptal";
+  var tipTag = Model.StokKarti.Tip == "urun" ? "t-blue" : "t-purple";
+  var tipText = Model.StokKarti.Tip == "urun" ? "Ürün" : "Hizmet";
+}
+
+<div class="section-header">
+  <div>
+    <h2>Satış #@Model.Id</h2>
+    <div class="section-sub"><span class="tag @durumClass">@durumText</span></div>
+  </div>
+  <div style="display:flex;gap:0.5rem">
+    @if (Model.Durum == "beklemede")
+    {
+      <form asp-action="DurumGuncelle" method="post" style="margin:0">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@Model.Id" />
+        <input type="hidden" name="durum" value="onaylandi" />
+        <button class="btn-primary" type="submit">Onayla</button>
+      </form>
+    }
+    @if (Model.Durum == "onaylandi")
+    {
+      <form asp-action="DurumGuncelle" method="post" style="margin:0">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@Model.Id" />
+        <input type="hidden" name="durum" value="teslim_edildi" />
+        <button class="btn-primary" style="background:var(--green)" type="submit">Teslim Et</button>
+      </form>
+    }
+    <a class="btn-outline" href="/Satis">← Satışlar</a>
+  </div>
+</div>
+
+<div class="g2" style="margin-bottom:1.5rem">
+  <div class="card">
+    <div class="card-head">Satış Bilgileri</div>
+    <div style="display:grid;gap:0.8rem;padding-top:0.3rem">
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:var(--text2)">Ürün / Hizmet</span>
+        <span style="color:var(--text0);font-weight:600">@Model.StokKarti.Ad <span class="tag @tipTag" style="margin-left:6px">@tipText</span></span>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:var(--text2)">Müşteri Firma</span>
+        <span style="color:var(--text0);font-weight:600">@Model.MusteriFirma.Ad</span>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:var(--text2)">Temsilci Firma</span>
+        <span style="color:var(--text0)">@(Model.TemsilciFirma?.Ad ?? "-")</span>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:var(--text2)">Proje</span>
+        <span style="color:var(--text0)">@(Model.Project?.Ad ?? "-")</span>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:var(--text2)">Tarih</span>
+        <span style="color:var(--text0)">@Model.Tarih.ToString("dd.MM.yyyy")</span>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:var(--text2)">Oluşturan</span>
+        <span style="color:var(--text0)">@Model.Olusturan.FullName</span>
+      </div>
+      @if (!string.IsNullOrEmpty(Model.Aciklama))
+      {
+        <div style="border-top:1px solid var(--bg2);padding-top:0.5rem">
+          <span style="color:var(--text2);display:block;margin-bottom:4px">Açıklama</span>
+          <span style="color:var(--text1);font-size:0.9rem">@Model.Aciklama</span>
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">Finansal Detay</div>
+    <div style="display:grid;gap:1rem;padding-top:0.3rem">
+      <div style="background:var(--bg1);border-radius:8px;padding:1rem;border-left:3px solid var(--gold)">
+        <div style="color:var(--text2);font-size:0.85rem;margin-bottom:4px">Toplam Tutar</div>
+        <div style="color:var(--gold);font-weight:700;font-size:1.5rem">@Model.ToplamTutar.ToString("N0") ₺</div>
+      </div>
+      <div style="display:flex;gap:1rem">
+        <div style="flex:1;background:var(--bg1);border-radius:8px;padding:0.8rem">
+          <div style="color:var(--text2);font-size:0.8rem">Miktar</div>
+          <div style="color:var(--accent);font-weight:700;font-size:1.1rem">@Model.Miktar @Model.Birim</div>
+        </div>
+        <div style="flex:1;background:var(--bg1);border-radius:8px;padding:0.8rem">
+          <div style="color:var(--text2);font-size:0.8rem">Birim Fiyat</div>
+          <div style="color:var(--text0);font-weight:700;font-size:1.1rem">@Model.BirimFiyat.ToString("N0") ₺</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:0.5rem 0">
+        <span style="color:var(--text2)">Fatura No</span>
+        <span style="color:var(--text0);font-family:monospace;font-weight:600">@(Model.FaturaNo ?? "-")</span>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:var(--text2)">Para Birimi</span>
+        <span style="color:var(--text0)">@Model.ParaBirimi</span>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,75 @@
+@model GorevCreateViewModel
+@{
+  ViewData["Title"] = "Yeni Görev";
+  var users = ViewBag.Users as List<AppUser>;
+  var projects = ViewBag.Projects as List<Project>;
+}
+
+<div style="max-width:480px">
+  <div class="section-header">
+    <h2>Yeni Görev Oluştur</h2>
+    <a class="btn-outline" href="/Gorevler">Geri Dön</a>
+  </div>
+
+  <div class="card">
+    <form asp-action="Ekle" method="post" enctype="multipart/form-data">
+      @Html.AntiForgeryToken()
+      <div class="f-group">
+        <label class="f-label">Görev Başlığı</label>
+        <input asp-for="Baslik" class="f-input" placeholder="Görev başlığı" />
+        <span asp-validation-for="Baslik" class="error-msg" style="margin-top:4px"></span>
+      </div>
+      <div class="f-group">
+        <label class="f-label">Açıklama</label>
+        <textarea asp-for="Aciklama" class="f-input" placeholder="Görev detayları"></textarea>
+      </div>
+      <div class="g2">
+        <div class="f-group">
+          <label class="f-label">Öncelik</label>
+          <select asp-for="Oncelik" class="f-input">
+            <option value="kritik">Kritik</option>
+            <option value="yuksek">Yüksek</option>
+            <option value="normal" selected>Normal</option>
+            <option value="dusuk">Düşük</option>
+          </select>
+        </div>
+        <div class="f-group">
+          <label class="f-label">Son Tarih</label>
+          <input asp-for="SonTarih" class="f-input" type="date" />
+        </div>
+      </div>
+      <div class="f-group">
+        <label class="f-label">Proje</label>
+        <select asp-for="ProjectId" class="f-input">
+          <option value="">-- Bağımsız Görev --</option>
+          @if (projects != null)
+          {
+            @foreach (var p in projects)
+            {
+              <option value="@p.Id" selected="@(p.Id == Model.ProjectId)">@p.Ad</option>
+            }
+          }
+        </select>
+      </div>
+      <div class="f-group">
+        <label class="f-label">Atanan Kullanıcı</label>
+        <select asp-for="AtananKullaniciId" class="f-input">
+          <option value="">-- Atanmamış --</option>
+          @if (users != null)
+          {
+            @foreach (var u in users)
+            {
+              <option value="@u.Id">@u.FullName</option>
+            }
+          }
+        </select>
+      </div>
+      <div class="f-group">
+        <label class="f-label">Dosya Ekle</label>
+        <input type="file" name="dosyalar" class="f-input" multiple accept=".jpg,.jpeg,.png,.gif,.bmp,.webp,.svg,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp" />
+        <span style="font-size:10px;color:var(--text3);margin-top:4px;display:block">Görsel, PDF veya Office dosyaları (maks. 10MB)</span>
+      </div>
+      <button type="submit" class="btn-primary">Görev Oluştur</button>
+    </form>
+  </div>
+</div>

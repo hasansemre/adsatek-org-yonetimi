@@ -1,0 +1,62 @@
+@model List<OrgYonetimi.Models.StokKarti>
+@{ ViewData["Title"] = "Stok Kartları"; var stokBilgileri = (Dictionary<int, decimal>)ViewBag.StokBilgileri; }
+
+<div class="section-header">
+  <div>
+    <h2>Stok Kartları</h2>
+    <div class="section-sub">Ürün ve hizmet stok yönetimi</div>
+  </div>
+  <a class="btn-primary" href="/Stok/Ekle">+ Yeni Stok Kartı</a>
+</div>
+
+<div class="card">
+  <table class="tbl">
+    <thead>
+      <tr>
+        <th>Kod</th>
+        <th>Ürün/Hizmet</th>
+        <th>Tip</th>
+        <th>Birim</th>
+        <th>Kategori</th>
+        <th>Stok</th>
+        <th>Birim Fiyat</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @foreach (var s in Model)
+      {
+        var stokMiktar = stokBilgileri.ContainsKey(s.Id) ? stokBilgileri[s.Id] : 0;
+        var stokDurum = stokMiktar <= s.MinStok ? "t-red" : "t-green";
+        var tipTag = s.Tip == "urun" ? "t-blue" : "t-purple";
+        <tr>
+          <td style="font-family:monospace;color:var(--text2)">@(s.Kod ?? "-")</td>
+          <td style="font-weight:600;color:var(--text0)">
+            <a href="/Stok/Detay/@s.Id" style="color:var(--accent);text-decoration:none">@s.Ad</a>
+          </td>
+          <td><span class="tag @tipTag">@(s.Tip == "urun" ? "Ürün" : "Hizmet")</span></td>
+          <td>@s.Birim</td>
+          <td>@(s.Kategori ?? "-")</td>
+          <td>
+            @if (s.Tip == "urun")
+            {
+              <span class="tag @stokDurum">@((int)stokMiktar) @s.Birim</span>
+            }
+            else
+            {
+              <span style="color:var(--text3)">-</span>
+            }
+          </td>
+          <td>@s.BirimFiyat.ToString("N2") @s.ParaBirimi</td>
+          <td style="text-align:right">
+            <a class="btn-sm btn-outline" href="/Stok/Duzenle/@s.Id">Düzenle</a>
+          </td>
+        </tr>
+      }
+      @if (!Model.Any())
+      {
+        <tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text2)">Henüz stok kartı eklenmemiş</td></tr>
+      }
+    </tbody>
+  </table>
+</div>

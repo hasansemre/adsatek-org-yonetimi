@@ -1,0 +1,286 @@
+@model Project
+@{
+  ViewData["Title"] = Model.Ad;
+  var users = ViewBag.Users as List<AppUser>;
+  var projeler = ViewBag.Projeler as List<Project>;
+  var total = Model.Gorevler.Count;
+  var done = Model.Gorevler.Count(g => g.Durum == "tamamlandi");
+  var pct = total > 0 ? (done * 100 / total) : 0;
+}
+
+<div class="section-header">
+  <div>
+    <h2>@Model.Ad</h2>
+    <div class="section-sub">Yönetici: @Model.Yonetici.FullName</div>
+  </div>
+  <a class="btn-outline" href="/Projeler">Geri Dön</a>
+</div>
+
+<div class="g3" style="margin-bottom:20px">
+  <div class="metric-card blue">
+    <div class="m-label">Toplam Görev</div>
+    <div class="m-value">@total</div>
+  </div>
+  <div class="metric-card green">
+    <div class="m-label">Tamamlanan</div>
+    <div class="m-value">@done</div>
+  </div>
+  <div class="metric-card gold">
+    <div class="m-label">İlerleme</div>
+    <div class="m-value">%@pct</div>
+    <div class="prog-track" style="margin-top:8px"><div class="prog-fill" style="width:@(pct)%;background:var(--gold)"></div></div>
+  </div>
+</div>
+
+@if (Model.Aciklama != null)
+{
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-head">Proje Açıklaması</div>
+    <p style="font-size:12px;color:var(--text1);line-height:1.5">@Model.Aciklama</p>
+  </div>
+}
+
+<div class="card">
+  <div class="card-head">
+    Görevler
+    @if (User.IsInRole("Admin") || User.IsInRole("Yonetici"))
+    {
+      <a class="btn-primary" href="/Gorevler/Ekle?projectId=@Model.Id">+ Görev Ekle</a>
+    }
+  </div>
+
+  @if (Model.Gorevler.Any())
+  {
+    <table class="tbl">
+      <thead><tr><th>Başlık</th><th>Durum</th><th>Öncelik</th><th>Atanan</th><th>Son Tarih</th><th></th></tr></thead>
+      <tbody>
+        @foreach (var g in Model.Gorevler.OrderByDescending(x => x.CreatedAt))
+        {
+          <tr>
+            <td style="font-weight:600;color:var(--text0)">@g.Baslik</td>
+            <td><span class="tag status-@g.Durum">@g.Durum</span></td>
+            <td><span class="priority-@g.Oncelik" style="font-size:11px;font-weight:600">@g.Oncelik</span></td>
+            <td>@(g.AtananKullanici?.FullName ?? "-")</td>
+            <td>@(g.SonTarih?.ToString("dd.MM.yyyy") ?? "-")</td>
+            <td style="text-align:right">
+              @if (g.Durum != "tamamlandi")
+              {
+                <form asp-controller="Gorevler" asp-action="DurumGuncelle" method="post" style="display:inline">
+                  @Html.AntiForgeryToken()
+                  <input type="hidden" name="id" value="@g.Id" />
+                  <input type="hidden" name="durum" value="tamamlandi" />
+                  <input type="hidden" name="returnUrl" value="/Projeler/Detay/@Model.Id" />
+                  <button class="btn-sm green" type="submit">Tamamla</button>
+                </form>
+              }
+              @if (User.IsInRole("Admin") || User.IsInRole("Yonetici"))
+              {
+                <form asp-controller="Gorevler" asp-action="Sil" method="post" style="display:inline">
+                  @Html.AntiForgeryToken()
+                  <input type="hidden" name="id" value="@g.Id" />
+                  <input type="hidden" name="returnUrl" value="/Projeler/Detay/@Model.Id" />
+                  <button class="btn-sm red" type="submit">Sil</button>
+                </form>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+  else
+  {
+    <div class="empty-state">Bu projede henüz görev yok</div>
+  }
+</div>
+
+<!-- Zimmetler -->
+<div class="card" style="margin-top:16px">
+  <div class="card-head">
+    Zimmetler
+    <span style="color:var(--text2);font-weight:400;font-size:0.85rem">(@Model.Zimmetler.Count kayıt)</span>
+    @if (User.IsInRole("Admin") || User.IsInRole("Yonetici"))
+    {
+      <button class="btn-primary" onclick="document.getElementById('zimmetForm').style.display = document.getElementById('zimmetForm').style.display === 'none' ? 'block' : 'none'">+ Zimmet Ekle</button>
+    }
+  </div>
+
+  @if (User.IsInRole("Admin") || User.IsInRole("Yonetici"))
+  {
+    <div id="zimmetForm" style="display:none;background:var(--bg1);border-radius:8px;padding:1rem;margin-bottom:1rem;border:1px solid var(--bg2)">
+      <form asp-controller="Projeler" asp-action="ZimmetEkle" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="projectId" value="@Model.Id" />
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem">
+          <div class="f-group">
+            <label class="f-label">Zimmet Adı *</label>
+            <input class="f-input" name="ad" required placeholder="Ör: Laptop, Araç, Cihaz..." />
+          </div>
+          <div class="f-group">
+            <label class="f-label">Seri / Takip No</label>
+            <input class="f-input" name="seriNo" placeholder="Opsiyonel" />
+          </div>
+          <div class="f-group">
+            <label class="f-label">Adet</label>
+            <input class="f-input" type="number" name="adet" value="1" min="1" />
+          </div>
+          <div class="f-group">
+            <label class="f-label">Teslim Alan Kişi</label>
+            <select class="f-input" name="teslimAlanKisiId">
+              <option value="">-- Seçiniz --</option>
+              @if (users != null)
+              {
+                @foreach (var u in users)
+                {
+                  <option value="@u.Id">@u.FullName</option>
+                }
+              }
+            </select>
+          </div>
+          <div class="f-group" style="grid-column:1/-1">
+            <label class="f-label">Açıklama</label>
+            <textarea class="f-input" name="aciklama" rows="2" placeholder="Opsiyonel"></textarea>
+          </div>
+        </div>
+        <div style="margin-top:0.8rem;display:flex;gap:0.5rem">
+          <button class="btn-primary" type="submit">Zimmet Ekle</button>
+          <button class="btn-outline" type="button" onclick="document.getElementById('zimmetForm').style.display='none'">İptal</button>
+        </div>
+      </form>
+    </div>
+  }
+
+  @if (Model.Zimmetler.Any())
+  {
+    <div style="overflow-x:auto">
+      <table class="tbl" style="table-layout:auto;width:100%">
+        <thead>
+          <tr>
+            <th style="min-width:140px">Zimmet Adı</th>
+            <th style="min-width:90px">Seri No</th>
+            <th style="min-width:50px;text-align:center">Adet</th>
+            <th style="min-width:120px">Teslim Alan</th>
+            <th style="min-width:90px">Teslim Tarihi</th>
+            <th style="min-width:90px">Durum</th>
+            @if (User.IsInRole("Admin"))
+            {
+              <th style="min-width:220px">İşlem</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @foreach (var z in Model.Zimmetler.OrderByDescending(x => x.CreatedAt))
+          {
+            var durumClass = z.Durum == "teslim_edildi" ? "t-blue" : z.Durum == "iade_edildi" ? "t-green" : z.Durum == "kayip" ? "t-red" : "t-yellow";
+            var durumText = z.Durum == "teslim_edildi" ? "Teslim Edildi" : z.Durum == "iade_edildi" ? "İade Edildi" : z.Durum == "kayip" ? "Kayıp" : "Hasarlı";
+            <tr>
+              <td style="font-weight:600;color:var(--text0)">
+                @z.Ad
+                @if (!string.IsNullOrEmpty(z.Aciklama))
+                {
+                  <div style="font-size:0.75rem;color:var(--text2);font-weight:400;margin-top:2px">@z.Aciklama</div>
+                }
+              </td>
+              <td style="color:var(--text1);font-family:monospace;font-size:0.85rem">@(z.SeriNo ?? "-")</td>
+              <td style="font-weight:600;color:var(--accent);text-align:center">@z.Adet</td>
+              <td>@(z.TeslimAlanKisi?.FullName ?? "-")</td>
+              <td>@z.TeslimTarihi.ToString("dd.MM.yyyy")</td>
+              <td><span class="tag @durumClass">@durumText</span></td>
+              @if (User.IsInRole("Admin"))
+              {
+                <td>
+                  <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center">
+                    @if (z.Durum == "teslim_edildi")
+                    {
+                      <form asp-controller="Projeler" asp-action="ZimmetDurumGuncelle" method="post" style="margin:0">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@z.Id" />
+                        <input type="hidden" name="projectId" value="@Model.Id" />
+                        <input type="hidden" name="durum" value="iade_edildi" />
+                        <button class="btn-sm green" type="submit">İade</button>
+                      </form>
+                      <form asp-controller="Projeler" asp-action="ZimmetDurumGuncelle" method="post" style="margin:0">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@z.Id" />
+                        <input type="hidden" name="projectId" value="@Model.Id" />
+                        <input type="hidden" name="durum" value="kayip" />
+                        <button class="btn-sm red" type="submit">Kayıp</button>
+                      </form>
+                      <form asp-controller="Projeler" asp-action="ZimmetDurumGuncelle" method="post" style="margin:0">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@z.Id" />
+                        <input type="hidden" name="projectId" value="@Model.Id" />
+                        <input type="hidden" name="durum" value="hasarli" />
+                        <button class="btn-sm" style="background:var(--yellow);color:#000" type="submit">Hasarlı</button>
+                      </form>
+                    }
+                    <button class="btn-sm" style="background:var(--bg2);color:var(--text0)" onclick="var el=document.getElementById('zimmetDuzenle_@z.Id');el.style.display=el.style.display==='none'?'table-row':'none'">Düzenle</button>
+                    <form asp-controller="Projeler" asp-action="ZimmetSil" method="post" style="margin:0" onsubmit="return confirm('Bu zimmeti silmek istediğinize emin misiniz?')">
+                      @Html.AntiForgeryToken()
+                      <input type="hidden" name="id" value="@z.Id" />
+                      <input type="hidden" name="projectId" value="@Model.Id" />
+                      <button class="btn-sm red" type="submit">Sil</button>
+                    </form>
+                  </div>
+                </td>
+              }
+            </tr>
+            @if (User.IsInRole("Admin"))
+            {
+              <tr id="zimmetDuzenle_@z.Id" style="display:none">
+                <td colspan="7" style="background:var(--bg1);padding:1rem;border-top:1px solid var(--bg2)">
+                  <form asp-controller="Projeler" asp-action="ZimmetGuncelle" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@z.Id" />
+                    <input type="hidden" name="projectId" value="@Model.Id" />
+                    <div style="display:grid;grid-template-columns:1fr 1fr auto auto;gap:0.8rem;align-items:end">
+                      <div class="f-group" style="margin:0">
+                        <label class="f-label">Teslim Alan Kişi</label>
+                        <select class="f-input" name="teslimAlanKisiId">
+                          <option value="">-- Seçiniz --</option>
+                          @if (users != null)
+                          {
+                            @foreach (var u in users)
+                            {
+                              @if (z.TeslimAlanKisiId == u.Id)
+                              {
+                                <option value="@u.Id" selected>@u.FullName</option>
+                              }
+                              else
+                              {
+                                <option value="@u.Id">@u.FullName</option>
+                              }
+                            }
+                          }
+                        </select>
+                      </div>
+                      <div class="f-group" style="margin:0">
+                        <label class="f-label">Proje Değiştir</label>
+                        <select class="f-input" name="yeniProjectId">
+                          <option value="@Model.Id">@Model.Ad (Mevcut)</option>
+                          @if (projeler != null)
+                          {
+                            @foreach (var pr in projeler.Where(x => x.Id != Model.Id))
+                            {
+                              <option value="@pr.Id">@pr.Ad</option>
+                            }
+                          }
+                        </select>
+                      </div>
+                      <button class="btn-primary" type="submit">Kaydet</button>
+                      <button class="btn-outline" type="button" onclick="document.getElementById('zimmetDuzenle_@z.Id').style.display='none'">İptal</button>
+                    </div>
+                  </form>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+  else
+  {
+    <div class="empty-state">Bu projede henüz zimmet kaydı yok</div>
+  }
+</div>

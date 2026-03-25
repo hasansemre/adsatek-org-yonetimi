@@ -1,0 +1,68 @@
+@model OrgYonetimi.ViewModels.FirmaViewModel
+@{ ViewData["Title"] = "Firma Düzenle"; }
+
+<div class="section-header">
+  <div>
+    <h2>Firma Düzenle</h2>
+    <div class="section-sub">@Model.Ad</div>
+  </div>
+  <a class="btn-outline" href="/Firmalar">← Geri Dön</a>
+</div>
+
+<div class="card" style="max-width:700px">
+  <form method="post" asp-action="Duzenle">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+
+    <div class="f-group">
+      <label class="f-label">Firma Tipi</label>
+      <select class="f-input" asp-for="Tip">
+        <option value="tedarikci">Tedarikçi Firma</option>
+        <option value="temsilci">Temsilci Firma</option>
+      </select>
+    </div>
+
+    <div class="f-group">
+      <label class="f-label">Firma Adı *</label>
+      <input class="f-input" asp-for="Ad" />
+      <span asp-validation-for="Ad" style="color:var(--red);font-size:0.85rem"></span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+      <div class="f-group">
+        <label class="f-label">Yetkili Kişi</label>
+        <input class="f-input" asp-for="YetkiliKisi" />
+      </div>
+      <div class="f-group">
+        <label class="f-label">Vergi No</label>
+        <input class="f-input" asp-for="VergiNo" />
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+      <div class="f-group">
+        <label class="f-label">Telefon</label>
+        <input class="f-input" asp-for="Telefon" />
+      </div>
+      <div class="f-group">
+        <label class="f-label">E-posta</label>
+        <input class="f-input" asp-for="Email" type="email" />
+      </div>
+    </div>
+
+    <div class="f-group">
+      <label class="f-label">Adres</label>
+      <textarea class="f-input" asp-for="Adres" rows="2"></textarea>
+    </div>
+
+    <div class="f-group">
+      <label class="f-label">Açıklama</label>
+      <textarea class="f-input" asp-for="Aciklama" rows="2"></textarea>
+    </div>
+
+    <div style="display:flex;gap:0.75rem;margin-top:1.5rem">
+      <button type="submit" class="btn-primary">Güncelle</button>
+      <a class="btn-outline" href="/Firmalar">İptal</a>
+    </div>
+  </form>
+</div>

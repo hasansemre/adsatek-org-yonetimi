@@ -1,0 +1,49 @@
+@model ProjectViewModel
+@{ ViewData["Title"] = "Yeni Proje"; var users = ViewBag.Users as List<AppUser>; }
+
+<div style="max-width:480px">
+  <div class="section-header">
+    <h2>Yeni Proje Oluştur</h2>
+    <a class="btn-outline" href="/Projeler">Geri Dön</a>
+  </div>
+
+  <div class="card">
+    <form asp-action="Ekle" method="post">
+      @Html.AntiForgeryToken()
+      <div class="f-group">
+        <label class="f-label">Proje Adı</label>
+        <input asp-for="Ad" class="f-input" placeholder="Proje adı" />
+        <span asp-validation-for="Ad" class="error-msg" style="margin-top:4px"></span>
+      </div>
+      <div class="f-group">
+        <label class="f-label">Açıklama</label>
+        <textarea asp-for="Aciklama" class="f-input" placeholder="Proje açıklaması"></textarea>
+      </div>
+      <div class="g2">
+        <div class="f-group">
+          <label class="f-label">Başlangıç Tarihi</label>
+          <input asp-for="BaslangicTarihi" class="f-input" type="date" />
+        </div>
+        <div class="f-group">
+          <label class="f-label">Bitiş Tarihi</label>
+          <input asp-for="BitisTarihi" class="f-input" type="date" />
+        </div>
+      </div>
+      <div class="f-group">
+        <label class="f-label">Proje Yöneticisi</label>
+        <select asp-for="YoneticiId" class="f-input">
+          <option value="">-- Seçiniz --</option>
+          @if (users != null)
+          {
+            @foreach (var u in users)
+            {
+              <option value="@u.Id">@u.FullName</option>
+            }
+          }
+        </select>
+        <span asp-validation-for="YoneticiId" class="error-msg" style="margin-top:4px"></span>
+      </div>
+      <button type="submit" class="btn-primary">Proje Oluştur</button>
+    </form>
+  </div>
+</div>

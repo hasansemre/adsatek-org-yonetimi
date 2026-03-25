@@ -1,0 +1,114 @@
+@{
+  ViewData["Title"] = "Yeni Satış";
+  var stokKartlari = ViewBag.StokKartlari as List<OrgYonetimi.Models.StokKarti> ?? new();
+  var firmalar = ViewBag.Firmalar as List<OrgYonetimi.Models.Firma> ?? new();
+  var projeler = ViewBag.Projeler as List<OrgYonetimi.Models.Project> ?? new();
+}
+
+<div class="section-header">
+  <div>
+    <h2>Yeni Satış</h2>
+    <div class="section-sub">Ürün veya hizmet satışı oluşturun</div>
+  </div>
+  <a class="btn-outline" href="/Satis">← Satışlar</a>
+</div>
+
+<div class="card" style="max-width:800px">
+  <form asp-action="Ekle" method="post">
+    @Html.AntiForgeryToken()
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+      <div class="f-group">
+        <label class="f-label">Ürün / Hizmet *</label>
+        <select class="f-input" name="stokKartiId" required id="stokSelect">
+          <option value="">-- Seçiniz --</option>
+          @foreach (var sk in stokKartlari)
+          {
+            var tipLabel = sk.Tip == "urun" ? "📦" : "🔧";
+            <option value="@sk.Id" data-birimfiyat="@sk.BirimFiyat" data-tip="@sk.Tip">@tipLabel @sk.Ad (@sk.Birim)</option>
+          }
+        </select>
+      </div>
+      <div class="f-group">
+        <label class="f-label">Müşteri Firma *</label>
+        <select class="f-input" name="musteriFirmaId" required>
+          <option value="">-- Seçiniz --</option>
+          @foreach (var f in firmalar)
+          {
+            <option value="@f.Id">@f.Ad</option>
+          }
+        </select>
+      </div>
+      <div class="f-group">
+        <label class="f-label">Temsilci Firma</label>
+        <select class="f-input" name="temsilciFirmaId">
+          <option value="">-- Seçiniz (Opsiyonel) --</option>
+          @foreach (var f in firmalar.Where(x => x.Tip == "temsilci"))
+          {
+            <option value="@f.Id">@f.Ad</option>
+          }
+        </select>
+      </div>
+      <div class="f-group">
+        <label class="f-label">Proje</label>
+        <select class="f-input" name="projectId">
+          <option value="">-- Seçiniz (Opsiyonel) --</option>
+          @foreach (var p in projeler)
+          {
+            <option value="@p.Id">@p.Ad</option>
+          }
+        </select>
+      </div>
+      <div class="f-group">
+        <label class="f-label">Miktar *</label>
+        <input class="f-input" type="number" name="miktar" id="miktarInput" required min="1" value="1" />
+      </div>
+      <div class="f-group">
+        <label class="f-label">Birim Fiyat (₺) *</label>
+        <input class="f-input" type="number" name="birimFiyat" id="birimFiyatInput" required min="0" step="1" value="0" />
+      </div>
+      <div class="f-group">
+        <label class="f-label">Fatura No</label>
+        <input class="f-input" name="faturaNo" placeholder="Opsiyonel" />
+      </div>
+      <div class="f-group">
+        <label class="f-label">Tarih</label>
+        <input class="f-input" type="date" name="tarih" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+      </div>
+      <div class="f-group" style="grid-column:1/-1">
+        <label class="f-label">Toplam Tutar</label>
+        <div id="toplamTutar" style="font-size:1.3rem;font-weight:700;color:var(--gold);padding:8px 0">0 ₺</div>
+      </div>
+      <div class="f-group" style="grid-column:1/-1">
+        <label class="f-label">Açıklama</label>
+        <textarea class="f-input" name="aciklama" rows="2" placeholder="Opsiyonel"></textarea>
+      </div>
+    </div>
+    <div style="margin-top:1.2rem;display:flex;gap:0.5rem">
+      <button class="btn-primary" type="submit">Satışı Kaydet</button>
+      <a class="btn-outline" href="/Satis">İptal</a>
+    </div>
+  </form>
+</div>
+
+<script>
+  const stokSelect = document.getElementById('stokSelect');
+  const miktarInput = document.getElementById('miktarInput');
+  const birimFiyatInput = document.getElementById('birimFiyatInput');
+  const toplamEl = document.getElementById('toplamTutar');
+
+  stokSelect.addEventListener('change', function() {
+    const opt = this.options[this.selectedIndex];
+    const fiyat = opt.dataset.birimfiyat;
+    if (fiyat) birimFiyatInput.value = Math.floor(parseFloat(fiyat));
+    hesapla();
+  });
+
+  function hesapla() {
+    const m = parseInt(miktarInput.value) || 0;
+    const f = parseInt(birimFiyatInput.value) || 0;
+    toplamEl.textContent = (m * f).toLocaleString('tr-TR') + ' ₺';
+  }
+
+  miktarInput.addEventListener('input', hesapla);
+  birimFiyatInput.addEventListener('input', hesapla);
+</script>

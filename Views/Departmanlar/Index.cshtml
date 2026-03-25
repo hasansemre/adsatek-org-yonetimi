@@ -1,0 +1,67 @@
+@model List<Department>
+@{ ViewData["Title"] = "Departmanlar"; }
+
+@if (TempData["Error"] != null)
+{
+  <div class="error-msg">@TempData["Error"]</div>
+}
+
+<div class="section-header">
+  <div>
+    <h2>Departmanlar</h2>
+    <div class="section-sub">@Model.Count departman</div>
+  </div>
+  @if (User.IsInRole("Admin"))
+  {
+    <a class="btn-primary" href="/Departmanlar/Ekle">+ Yeni Departman</a>
+  }
+</div>
+
+<div class="g2">
+  <div class="card">
+    <div class="card-head">Departman Listesi</div>
+    <table class="tbl">
+      <thead><tr><th>Ad</th><th>Üst Departman</th><th>Kişi</th><th></th></tr></thead>
+      <tbody>
+        @foreach (var d in Model)
+        {
+          <tr>
+            <td style="font-weight:600;color:var(--text0)">@d.Ad</td>
+            <td>@(d.UstDepartman?.Ad ?? "-")</td>
+            <td>@d.Kullanicilar.Count</td>
+            <td style="text-align:right">
+              @if (User.IsInRole("Admin"))
+              {
+                <a class="btn-sm blue" href="/Departmanlar/Duzenle/@d.Id">Düzenle</a>
+                <form asp-action="Sil" asp-route-id="@d.Id" method="post" style="display:inline" onsubmit="return confirm('Silmek istediğinize emin misiniz?')">
+                  @Html.AntiForgeryToken()
+                  <button class="btn-sm red" type="submit">Sil</button>
+                </form>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-head">Organizasyon Şeması</div>
+    @{ var hierarchy = ViewBag.Hierarchy as List<Department>; }
+    @if (hierarchy?.Any() == true)
+    {
+      <div class="org-tree">
+        <ul>
+          @foreach (var root in hierarchy)
+          {
+            @await Html.PartialAsync("_TreeNode", root)
+          }
+        </ul>
+      </div>
+    }
+    else
+    {
+      <div class="empty-state">Henüz departman yok</div>
+    }
+  </div>
+</div>

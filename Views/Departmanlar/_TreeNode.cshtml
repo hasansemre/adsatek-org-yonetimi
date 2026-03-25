@@ -1,0 +1,16 @@
+@model Department
+<li>
+  <span class="tree-node">
+    @Model.Ad
+    <span class="tree-count">(@Model.Kullanicilar.Count kişi)</span>
+  </span>
+  @if (Model.AltDepartmanlar.Any())
+  {
+    <ul>
+      @foreach (var child in Model.AltDepartmanlar)
+      {
+        @await Html.PartialAsync("_TreeNode", child)
+      }
+    </ul>
+  }
+</li>

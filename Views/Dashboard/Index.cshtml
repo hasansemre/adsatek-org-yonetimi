@@ -1,0 +1,312 @@
+@model DashboardViewModel
+@{ ViewData["Title"] = "Dashboard"; }
+
+<div class="g4">
+  <div class="metric-card blue">
+    <div class="m-label">Kullanıcılar</div>
+    <div class="m-value">@Model.ToplamKullanici</div>
+    <div class="m-trend">toplam</div>
+  </div>
+  <div class="metric-card gold">
+    <div class="m-label">Projeler</div>
+    <div class="m-value">@Model.ToplamProje</div>
+    <div class="m-trend">@Model.ToplamDepartman departman</div>
+  </div>
+  <div class="metric-card green">
+    <div class="m-label">Aktif Görevler</div>
+    <div class="m-value">@Model.AktifGorev</div>
+    <div class="m-trend">@Model.TamamlananGorev tamamlandı</div>
+  </div>
+  <div class="metric-card red">
+    <div class="m-label">Geciken Görevler</div>
+    <div class="m-value">@Model.GecikmiGorev</div>
+    <div class="m-trend">acil ilgi gerekiyor</div>
+  </div>
+</div>
+
+<div class="g2">
+  <div class="card">
+    <div class="card-head">
+      Son Görevler
+      <a class="card-action" href="/Gorevler">Tümünü Gör</a>
+    </div>
+    @if (Model.SonGorevler.Any())
+    {
+      <table class="tbl">
+        <thead><tr><th>Başlık</th><th>Durum</th><th>Atanan</th></tr></thead>
+        <tbody>
+          @foreach (var g in Model.SonGorevler)
+          {
+            <tr>
+              <td><a href="/Gorevler/Detay/@g.Id" style="color:var(--accent);text-decoration:none">@g.Baslik</a></td>
+              <td><span class="tag status-@g.Durum">@g.Durum</span></td>
+              <td>@(g.AtananKullanici?.FullName ?? "-")</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+    else
+    {
+      <div class="empty-state">Henüz görev yok</div>
+    }
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      Son Projeler
+      <a class="card-action" href="/Projeler">Tümünü Gör</a>
+    </div>
+    @if (Model.SonProjeler.Any())
+    {
+      @foreach (var p in Model.SonProjeler)
+      {
+        var total = p.Gorevler.Count;
+        var done = p.Gorevler.Count(g => g.Durum == "tamamlandi");
+        var pct = total > 0 ? (done * 100 / total) : 0;
+        <div style="margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <a href="/Projeler/Detay/@p.Id" style="font-size:12px;font-weight:600;color:var(--text0);text-decoration:none">@p.Ad</a>
+            <span class="tag status-@(p.Durum == "aktif" ? "devam" : p.Durum == "tamamlandi" ? "tamamlandi" : p.Durum == "beklemede" ? "bekliyor" : "gecikti")">@p.Durum</span>
+          </div>
+          <div class="prog-track"><div class="prog-fill" style="width:@(pct)%;background:var(--accent)"></div></div>
+          <div style="font-size:9px;color:var(--text3);margin-top:3px">@done / @total görev tamamlandı</div>
+        </div>
+      }
+    }
+    else
+    {
+      <div class="empty-state">Henüz proje yok</div>
+    }
+  </div>
+</div>
+
+@if (!User.IsInRole("Calisan"))
+{
+<!-- Tedarikçi Firmalar -->
+@if (Model.TedarikciOzetleri.Any())
+{
+  <div style="margin-top:1.5rem">
+    <div class="card">
+      <div class="card-head">
+        🏭 Tedarikçi Firmalar - Alım Özeti
+        <a class="card-action" href="/Firmalar">Tümünü Gör</a>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;padding-top:0.5rem">
+        @foreach (var tf in Model.TedarikciOzetleri)
+        {
+          <div style="background:var(--bg1);border-radius:10px;padding:1.2rem;border-left:3px solid var(--gold)">
+            <div style="font-weight:700;color:var(--text0);font-size:1rem;margin-bottom:0.8rem">@tf.FirmaAdi</div>
+            <div style="display:grid;gap:0.5rem">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="color:var(--text2);font-size:0.85rem">Toplam Sipariş</span>
+                <span style="color:var(--text0);font-weight:600">@tf.ToplamSiparis adet</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="color:var(--text2);font-size:0.85rem">Teslim Alınan</span>
+                <span class="tag t-green" style="font-size:0.8rem">@tf.TeslimAlinan adet</span>
+              </div>
+              @if (tf.Bekleyen > 0)
+              {
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <span style="color:var(--text2);font-size:0.85rem">Bekleyen</span>
+                  <span class="tag t-yellow" style="font-size:0.8rem">@tf.Bekleyen adet</span>
+                </div>
+              }
+              <div style="border-top:1px solid var(--bg2);padding-top:0.5rem;margin-top:0.3rem">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <span style="color:var(--text2);font-size:0.85rem">Toplam Harcama</span>
+                  <span style="color:var(--gold);font-weight:700;font-size:1.1rem">@tf.ToplamHarcama.ToString("N2") ₺</span>
+                </div>
+              </div>
+              @if (tf.BekleyenTutar > 0)
+              {
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <span style="color:var(--text2);font-size:0.85rem">Bekleyen Tutar</span>
+                  <span style="color:var(--yellow);font-weight:600;font-size:0.95rem">@tf.BekleyenTutar.ToString("N2") ₺</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Temsilci Firmalar -->
+@if (Model.TemsilciOzetleri.Any())
+{
+  <div style="margin-top:1.5rem">
+    <div class="card">
+      <div class="card-head">
+        🏢 Temsilci Firmalar - Stok & Harcama Özeti
+        <a class="card-action" href="/Firmalar">Tümünü Gör</a>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem;padding-top:0.5rem">
+        @foreach (var tm in Model.TemsilciOzetleri)
+        {
+          <div style="background:var(--bg1);border-radius:10px;padding:1.2rem;border-left:3px solid var(--accent)">
+            <div style="font-weight:700;color:var(--text0);font-size:1rem;margin-bottom:0.8rem">@tm.FirmaAdi</div>
+            <div style="display:grid;gap:0.5rem">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="color:var(--text2);font-size:0.85rem">Toplam Harcama</span>
+                <span style="color:var(--gold);font-weight:700;font-size:1.1rem">@tm.ToplamHarcama.ToString("N2") ₺</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="color:var(--text2);font-size:0.85rem">Farklı Ürün</span>
+                <span style="color:var(--text0);font-weight:600">@tm.ToplamUrun çeşit</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="color:var(--text2);font-size:0.85rem">Toplam Stok</span>
+                <span style="color:var(--green);font-weight:700;font-size:1.1rem">@tm.ToplamStokAdedi adet</span>
+              </div>
+              @if (tm.StokDetaylari.Any())
+              {
+                <div style="border-top:1px solid var(--bg2);padding-top:0.5rem;margin-top:0.3rem">
+                  <div style="color:var(--text2);font-size:0.8rem;margin-bottom:0.4rem">Stok Detayı:</div>
+                  @foreach (var sd in tm.StokDetaylari)
+                  {
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:0.2rem 0">
+                      <span style="color:var(--text1);font-size:0.85rem">@sd.UrunAdi</span>
+                      <span style="color:var(--accent);font-weight:600;font-size:0.85rem">@sd.Adet @sd.Birim</span>
+                    </div>
+                  }
+                </div>
+              }
+              else
+              {
+                <div style="color:var(--text3);font-size:0.8rem;font-style:italic;margin-top:0.3rem">Henüz stok hareketi yok</div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Stok Durumu -->
+@if (Model.StokDurumlari.Any() || Model.ToplamStokKarti > 0)
+{
+  <div style="margin-top:1.5rem">
+    <div class="g4" style="margin-bottom:1rem">
+      <div class="metric-card" style="border-left:3px solid var(--accent)">
+        <div class="m-label">Stok Kartları</div>
+        <div class="m-value">@Model.ToplamStokKarti</div>
+        <div class="m-trend">ürün takipte</div>
+      </div>
+      <div class="metric-card" style="border-left:3px solid @(Model.DusukStokUrun > 0 ? "var(--red)" : "var(--green)")">
+        <div class="m-label">Düşük Stok</div>
+        <div class="m-value" style="color:@(Model.DusukStokUrun > 0 ? "var(--red)" : "var(--green)")">@Model.DusukStokUrun</div>
+        <div class="m-trend">@(Model.DusukStokUrun > 0 ? "ürün kritik seviyede" : "tüm stoklar yeterli")</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        📦 Stok Durumu
+        <a class="card-action" href="/Stok">Tümünü Gör</a>
+      </div>
+      @if (Model.StokDurumlari.Any())
+      {
+        <table class="tbl">
+          <thead>
+            <tr><th>Ürün</th><th>Mevcut Stok</th><th>Min. Stok</th><th>Durum</th></tr>
+          </thead>
+          <tbody>
+            @foreach (var s in Model.StokDurumlari.Take(8))
+            {
+              <tr>
+                <td style="font-weight:600">
+                  <a href="/Stok/Detay/@s.Id" style="color:var(--accent);text-decoration:none">@s.Ad</a>
+                </td>
+                <td style="font-weight:600;color:@(s.DusukStok ? "var(--red)" : "var(--green)")">@s.MevcutStok @s.Birim</td>
+                <td style="color:var(--text2)">@s.MinStok @s.Birim</td>
+                <td>
+                  @if (s.MevcutStok == 0)
+                  {
+                    <span class="tag t-red">Stok Yok</span>
+                  }
+                  else if (s.DusukStok)
+                  {
+                    <span class="tag t-yellow">Düşük Stok</span>
+                  }
+                  else
+                  {
+                    <span class="tag t-green">Yeterli</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+      else
+      {
+        <div class="empty-state">Henüz stok kartı eklenmemiş</div>
+      }
+    </div>
+  </div>
+}
+<!-- Satış Özeti -->
+@if (Model.ToplamSatisAdedi > 0 || Model.ToplamSatisTutari > 0)
+{
+  <div style="margin-top:1.5rem">
+    <div class="g4" style="margin-bottom:1rem">
+      <div class="metric-card" style="border-left:3px solid var(--green)">
+        <div class="m-label">Toplam Satış</div>
+        <div class="m-value" style="color:var(--green)">@Model.ToplamSatisTutari.ToString("N0") ₺</div>
+        <div class="m-trend">@Model.ToplamSatisAdedi işlem</div>
+      </div>
+      <div class="metric-card" style="border-left:3px solid var(--accent)">
+        <div class="m-label">Teslim Edilen</div>
+        <div class="m-value" style="color:var(--accent)">@Model.TeslimEdilenSatis.ToString("N0") ₺</div>
+        <div class="m-trend">tamamlanan satışlar</div>
+      </div>
+      @if (Model.BekleyenSatis > 0)
+      {
+        <div class="metric-card" style="border-left:3px solid var(--yellow)">
+          <div class="m-label">Bekleyen Satış</div>
+          <div class="m-value" style="color:var(--yellow)">@Model.BekleyenSatis.ToString("N0") ₺</div>
+          <div class="m-trend">bekleyen/onaylanan</div>
+        </div>
+      }
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        💰 Son Satışlar
+        <a class="card-action" href="/Satis">Tümünü Gör</a>
+      </div>
+      @if (Model.SatisOzetleri.Any())
+      {
+        <table class="tbl">
+          <thead>
+            <tr><th>Tarih</th><th>Ürün/Hizmet</th><th>Müşteri</th><th>Miktar</th><th>Tutar</th><th>Durum</th></tr>
+          </thead>
+          <tbody>
+            @foreach (var s in Model.SatisOzetleri)
+            {
+              var dCls = s.Durum == "teslim_edildi" ? "t-green" : s.Durum == "beklemede" ? "t-yellow" : s.Durum == "onaylandi" ? "t-blue" : "t-red";
+              var dTxt = s.Durum == "teslim_edildi" ? "Teslim Edildi" : s.Durum == "beklemede" ? "Beklemede" : s.Durum == "onaylandi" ? "Onaylandı" : "İptal";
+              <tr>
+                <td>@s.Tarih.ToString("dd.MM.yyyy")</td>
+                <td style="font-weight:600;color:var(--text0)">@s.UrunAdi</td>
+                <td>@s.MusteriFirmaAdi</td>
+                <td style="font-weight:600">@s.Miktar</td>
+                <td style="font-weight:600;color:var(--gold)">@s.Tutar.ToString("N0") ₺</td>
+                <td><span class="tag @dCls">@dTxt</span></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+      else
+      {
+        <div class="empty-state">Henüz satış kaydı yok</div>
+      }
+    </div>
+  </div>
+}
+} <!-- /Calisan gizle -->

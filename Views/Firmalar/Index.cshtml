@@ -1,0 +1,70 @@
+@model List<OrgYonetimi.Models.Firma>
+@{ ViewData["Title"] = "Firmalar"; var aktifTip = ViewBag.AktifTip as string; }
+
+<div class="section-header">
+  <div>
+    <h2>Firmalar</h2>
+    <div class="section-sub">Temsilci ve tedarikçi firma yönetimi</div>
+  </div>
+  @if (User.IsInRole("Admin") || User.IsInRole("Yonetici"))
+  {
+    <a class="btn-primary" href="/Firmalar/Ekle">+ Yeni Firma</a>
+  }
+</div>
+
+<div class="filter-bar" style="margin-bottom:1.2rem">
+  <a class="btn-sm @(aktifTip == null ? "btn-primary" : "btn-outline")" href="/Firmalar">Tümü</a>
+  <a class="btn-sm @(aktifTip == "temsilci" ? "btn-primary" : "btn-outline")" href="/Firmalar?tip=temsilci">Temsilci</a>
+  <a class="btn-sm @(aktifTip == "tedarikci" ? "btn-primary" : "btn-outline")" href="/Firmalar?tip=tedarikci">Tedarikçi</a>
+</div>
+
+<div class="card">
+  <table class="tbl">
+    <thead>
+      <tr>
+        <th>Firma Adı</th>
+        <th>Tip</th>
+        <th>Yetkili</th>
+        <th>Telefon</th>
+        <th>E-posta</th>
+        <th>Vergi No</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @foreach (var f in Model)
+      {
+        var tipClass = f.Tip == "temsilci" ? "t-blue" : "t-green";
+        var tipText = f.Tip == "temsilci" ? "Temsilci" : "Tedarikçi";
+        <tr style="@(f.IsActive ? "" : "opacity:0.5")">
+          <td style="font-weight:600">
+            <a href="/Firmalar/Detay/@f.Id" style="color:var(--accent);text-decoration:none">@f.Ad</a>
+          </td>
+          <td><span class="tag @tipClass">@tipText</span></td>
+          <td>@(f.YetkiliKisi ?? "-")</td>
+          <td>@(f.Telefon ?? "-")</td>
+          <td>@(f.Email ?? "-")</td>
+          <td>@(f.VergiNo ?? "-")</td>
+          <td style="text-align:right">
+            <a class="btn-sm btn-outline" href="/Firmalar/Detay/@f.Id">Detay</a>
+            @if (User.IsInRole("Admin") || User.IsInRole("Yonetici"))
+            {
+              <a class="btn-sm btn-outline" href="/Firmalar/Duzenle/@f.Id">Düzenle</a>
+            }
+            @if (User.IsInRole("Admin") && f.IsActive)
+            {
+              <form method="post" action="/Firmalar/Sil/@f.Id" style="display:inline">
+                @Html.AntiForgeryToken()
+                <button class="btn-sm btn-danger" onclick="return confirm('Bu firmayı pasife almak istediğinize emin misiniz?')">Sil</button>
+              </form>
+            }
+          </td>
+        </tr>
+      }
+      @if (!Model.Any())
+      {
+        <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text2)">Henüz firma eklenmemiş</td></tr>
+      }
+    </tbody>
+  </table>
+</div>

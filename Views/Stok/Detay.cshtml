@@ -1,0 +1,206 @@
+@model OrgYonetimi.Models.StokKarti
+@using OrgYonetimi.ViewModels
+@using OrgYonetimi.Models
+@{
+  ViewData["Title"] = Model.Ad;
+  var toplamStok = (decimal)ViewBag.ToplamStok;
+  var firmaStoklar = (List<FirmaStokOzet>)ViewBag.FirmaStoklar;
+  var hareketler = (List<StokHareket>)ViewBag.Hareketler;
+  var satislar = ViewBag.Satislar as List<Satis> ?? new List<Satis>();
+}
+
+<div class="section-header">
+  <div>
+    <h2>@Model.Ad</h2>
+    <div class="section-sub">Stok Kartı Detay</div>
+  </div>
+  <div style="display:flex;gap:0.5rem">
+    <a class="btn-outline" href="/Stok/Duzenle/@Model.Id">Düzenle</a>
+    <a class="btn-outline" href="/Stok">← Geri Dön</a>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1.5rem">
+  <div class="metric-card">
+    <div class="metric-label">Tip</div>
+    <div class="metric-value" style="font-size:1.2rem">@(Model.Tip == "urun" ? "Ürün" : "Hizmet")</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">Stok Kodu</div>
+    <div class="metric-value" style="font-size:1.2rem">@(Model.Kod ?? "-")</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">Toplam Stok</div>
+    <div class="metric-value" style="font-size:1.4rem;color:@(toplamStok <= Model.MinStok ? "var(--red)" : "var(--green)")">
+      @((int)toplamStok) @Model.Birim
+    </div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">Min. Stok</div>
+    <div class="metric-value" style="font-size:1.2rem">@((int)Model.MinStok) @Model.Birim</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">Birim Fiyat</div>
+    <div class="metric-value" style="font-size:1.2rem">@Model.BirimFiyat.ToString("N2") @Model.ParaBirimi</div>
+  </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Aciklama))
+{
+  <div class="card" style="margin-bottom:1.5rem">
+    <h3 style="margin-bottom:0.5rem;color:var(--text1)">Açıklama</h3>
+    <p style="color:var(--text2);margin:0">@Model.Aciklama</p>
+  </div>
+}
+
+@if (firmaStoklar.Any())
+{
+  <div class="card" style="margin-bottom:1.5rem">
+    <h3 style="margin-bottom:1rem;color:var(--text1)">📊 Firma Bazlı Stok Dağılımı</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem">
+      @foreach (var fs in firmaStoklar)
+      {
+        var stokRenk = fs.MevcutStok > 0 ? "var(--green)" : "var(--red)";
+        <div style="background:var(--bg1);border-radius:10px;padding:1rem;border-left:3px solid @stokRenk">
+          <div style="font-weight:600;color:var(--text0);margin-bottom:0.5rem">@fs.FirmaAdi</div>
+          <div style="display:flex;justify-content:space-between;font-size:0.85rem;color:var(--text2);margin-bottom:0.3rem">
+            <span>Giriş:</span><span style="color:var(--green)">+@((int)fs.ToplamGiris)</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:0.85rem;color:var(--text2);margin-bottom:0.3rem">
+            <span>Çıkış:</span><span style="color:var(--red)">-@((int)fs.ToplamCikis)</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-weight:700;font-size:1.1rem;border-top:1px solid var(--bg2);padding-top:0.4rem;margin-top:0.3rem">
+            <span style="color:var(--text1)">Mevcut:</span>
+            <span style="color:@stokRenk">@((int)fs.MevcutStok) @Model.Birim</span>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+<div class="card" style="margin-bottom:1.5rem">
+  <h3 style="margin-bottom:1rem;color:var(--text1)">📦 Tedarik Geçmişi</h3>
+  <table class="tbl">
+    <thead>
+      <tr>
+        <th>Tarih</th>
+        <th>Tedarikçi</th>
+        <th>Temsilci</th>
+        <th>Proje</th>
+        <th>Miktar</th>
+        <th>Birim Fiyat</th>
+        <th>Toplam</th>
+        <th>Durum</th>
+      </tr>
+    </thead>
+    <tbody>
+      @foreach (var t in Model.Tedarikler)
+      {
+        var durumClass = t.Durum switch
+        {
+          "beklemede" => "t-yellow",
+          "onaylandi" => "t-blue",
+          "teslim_alindi" => "t-green",
+          "iptal" => "t-red",
+          _ => "t-gray"
+        };
+        var durumText = t.Durum switch
+        {
+          "beklemede" => "Beklemede",
+          "onaylandi" => "Onaylandı",
+          "teslim_alindi" => "Teslim Alındı",
+          "iptal" => "İptal",
+          _ => t.Durum
+        };
+        <tr>
+          <td>@t.Tarih.ToString("dd.MM.yyyy")</td>
+          <td>@t.TedarikFirma.Ad</td>
+          <td>@(t.TemsilciFirma?.Ad ?? "-")</td>
+          <td>@(t.Project?.Ad ?? "-")</td>
+          <td>@((int)t.Miktar) @t.Birim</td>
+          <td>@t.BirimFiyat.ToString("N2") @t.ParaBirimi</td>
+          <td style="font-weight:600">@t.ToplamTutar.ToString("N2") @t.ParaBirimi</td>
+          <td><span class="tag @durumClass">@durumText</span></td>
+        </tr>
+      }
+      @if (!Model.Tedarikler.Any())
+      {
+        <tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text2)">Henüz tedarik kaydı yok</td></tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+@if (satislar.Any())
+{
+  <div class="card" style="margin-bottom:1.5rem">
+    <h3 style="margin-bottom:1rem;color:var(--text1)">💰 Satış Geçmişi</h3>
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>Tarih</th>
+          <th>Müşteri Firma</th>
+          <th>Temsilci</th>
+          <th>Proje</th>
+          <th>Miktar</th>
+          <th>Tutar</th>
+          <th>Fatura No</th>
+          <th>Durum</th>
+        </tr>
+      </thead>
+      <tbody>
+        @foreach (var s in satislar)
+        {
+          var sDurumClass = s.Durum == "teslim_edildi" ? "t-green" : s.Durum == "beklemede" ? "t-yellow" : s.Durum == "onaylandi" ? "t-blue" : "t-red";
+          var sDurumText = s.Durum == "teslim_edildi" ? "Teslim Edildi" : s.Durum == "beklemede" ? "Beklemede" : s.Durum == "onaylandi" ? "Onaylandı" : "İptal";
+          <tr>
+            <td>@s.Tarih.ToString("dd.MM.yyyy")</td>
+            <td style="font-weight:600;color:var(--text0)">@s.MusteriFirma.Ad</td>
+            <td>@(s.TemsilciFirma?.Ad ?? "-")</td>
+            <td>@(s.Project?.Ad ?? "-")</td>
+            <td style="font-weight:600">@s.Miktar @Model.Birim</td>
+            <td style="font-weight:600;color:var(--gold)">@s.ToplamTutar.ToString("N0") ₺</td>
+            <td style="font-family:monospace;font-size:0.85rem">@(s.FaturaNo ?? "-")</td>
+            <td><span class="tag @sDurumClass">@sDurumText</span></td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
+@if (hareketler.Any())
+{
+  <div class="card">
+    <h3 style="margin-bottom:1rem;color:var(--text1)">📋 Stok Hareketleri</h3>
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>Tarih</th>
+          <th>Tip</th>
+          <th>Miktar</th>
+          <th>Temsilci Firma</th>
+          <th>Açıklama</th>
+          <th>İşlemi Yapan</th>
+        </tr>
+      </thead>
+      <tbody>
+        @foreach (var h in hareketler)
+        {
+          var tipClass = h.HareketTipi == "giris" ? "t-green" : "t-red";
+          var tipText = h.HareketTipi == "giris" ? "Giriş" : "Çıkış";
+          var miktarSign = h.Miktar > 0 ? "+" : "";
+          <tr>
+            <td>@h.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+            <td><span class="tag @tipClass">@tipText</span></td>
+            <td style="font-weight:600;color:@(h.Miktar > 0 ? "var(--green)" : "var(--red)")">@miktarSign@((int)h.Miktar) @Model.Birim</td>
+            <td>@(h.TemsilciFirma?.Ad ?? "-")</td>
+            <td style="color:var(--text2);font-size:0.85rem">@(h.Aciklama ?? "-")</td>
+            <td>@h.Olusturan.FullName</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

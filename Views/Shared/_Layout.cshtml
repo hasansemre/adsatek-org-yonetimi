@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ADSATEK – @ViewData["Title"]</title>
+  <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+@if (User.Identity?.IsAuthenticated == true)
+{
+  var userName = User.Identity.Name ?? "";
+  var isAdmin = User.IsInRole("Admin");
+  var isYonetici = User.IsInRole("Yonetici");
+  var roleName = isAdmin ? "Admin" : isYonetici ? "Yönetici" : "Çalışan";
+  var roleClass = isAdmin ? "role-admin" : isYonetici ? "role-yonetici" : "role-calisan";
+  var avaGrad = isAdmin ? "linear-gradient(135deg,#92400e,#fbbf24)" : isYonetici ? "linear-gradient(135deg,#1d4ed8,#3b82f6)" : "linear-gradient(135deg,#374151,#6b7280)";
+  var nameParts = userName.Split(new[]{'@','.'}, StringSplitOptions.RemoveEmptyEntries);
+  var initials = string.Join("", nameParts.Take(2).Select(w => w.Length > 0 ? w[0].ToString().ToUpper() : ""));
+  if (initials.Length > 2) initials = initials[..2];
+  var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+
+  <div class="app-shell">
+    <div class="sidebar" id="sidebar">
+      <div class="logo-block">
+        <div class="logo-mark">
+          <div class="logo-icon" style="background:linear-gradient(135deg,#00b4b4,#009999);box-shadow:0 0 14px rgba(0,180,180,.3)">
+            <svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.4">
+              <path d="M10 3v14M3 10h14" stroke-linecap="round"/>
+              <rect x="6" y="6" width="8" height="8" rx="1.5" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div>
+            <div class="brand" style="letter-spacing:.12em"><span style="color:#2dd4bf">ADS</span><span style="color:#5eead4">ATEK</span></div>
+            <div class="brand-sub">Teknik ve Biyomedikal</div>
+          </div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section">Genel Bakış</div>
+        <a class="nav-item @(currentController == "Dashboard" ? "active" : "")" href="/Dashboard">
+          <svg class="ni" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1" y="1" width="5.5" height="5.5" rx=".8"/><rect x="8.5" y="1" width="5.5" height="5.5" rx=".8"/><rect x="1" y="8.5" width="5.5" height="5.5" rx=".8"/><rect x="8.5" y="8.5" width="5.5" height="5.5" rx=".8"/></svg>
+          Dashboard
+        </a>
+        <a class="nav-item @(currentController == "Projeler" ? "active" : "")" href="/Projeler">
+          <svg class="ni" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 3h11v9H2z" stroke-linejoin="round"/><path d="M2 6h11"/></svg>
+          Projeler
+        </a>
+        <a class="nav-item @(currentController == "Gorevler" ? "active" : "")" href="/Gorevler">
+          <svg class="ni" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 4h11M2 7.5h7M2 11h9"/></svg>
+          Görevler
+        </a>
+
+        <div class="nav-section">Firmalar</div>
+        <a class="nav-item @(currentController == "Firmalar" ? "active" : "")" href="/Firmalar">
+          <svg class="ni" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1.5" y="3" width="12" height="9" rx="1"/><path d="M5 3V1.5h5V3"/><path d="M1.5 7h12"/></svg>
+          Firmalar
+        </a>
+
+        @if (isAdmin || isYonetici)
+        {
+        <div class="nav-section">Tedarik</div>
+        <a class="nav-item @(currentController == "Stok" ? "active" : "")" href="/Stok">
+          <svg class="ni" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="2" width="11" height="11" rx="1.2"/><path d="M5 5h5M5 7.5h3M5 10h4"/></svg>
+          Stok Kartları
+        </a>
+        <a class="nav-item @(currentController == "Tedarik" ? "active" : "")" href="/Tedarik">
+          <svg class="ni" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 11V4l4-2 4 2v7l-4 2-4-2z"/><path d="M3 4l4 2 4-2M7 6v7"/></svg>
+          Tedarikler
+        </a>
+        <a class="nav-item @(currentController == "Satis" ? "active" : "")" href="/Satis">
+          <svg class="ni" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 3h11l-1.5 6H4.5L2 3z"/><circle cx="5.5" cy="12" r="1"/><circle cx="10.5" cy="12" r="1"/></svg>
+          Satışlar
+        </a>
+
+        <div class="nav-section">Yönetim</div>
+        <a class="nav-item @(currentController == "Departmanlar" ? "active" : "")" href="/Departmanlar">
+          <svg class="ni" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="7.5" cy="3" r="2"/><circle cx="3.5" cy="11" r="2"/><circle cx="11.5" cy="11" r="2"/><path d="M7.5 5v3M5.5 9.5L7.5 8M9.5 9.5L7.5 8"/></svg>
+          Departmanlar
+        </a>
+        }
+        @if (isAdmin)
+        {
+        <div class="nav-section">Sistem</div>
+        <a class="nav-item @(currentController == "Kullanicilar" ? "active" : "")" href="/Kullanicilar">
+          <svg class="ni" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="7.5" cy="4" r="3"/><path d="M1 13.5c0-3 3-5.5 6.5-5.5s6.5 2.5 6.5 5.5"/></svg>
+          Kullanıcılar
+        </a>
+        }
+      </nav>
+
+      <div class="user-block">
+        <div class="user-ava" style="background:@avaGrad">@initials</div>
+        <div style="flex:1;min-width:0">
+          <div class="user-name">@userName</div>
+          <div class="user-role-label"><span class="role-pill @roleClass">@roleName</span></div>
+        </div>
+        <a href="/Account/Logout" class="logout-btn" title="Çıkış">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4">
+            <path d="M5 7h8M10 4l3 3-3 3"/><path d="M8 2H2v10h6"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="main-area">
+      <div class="topbar">
+        <button id="hamburger" onclick="document.getElementById('sidebar').classList.toggle('open');document.getElementById('overlay').classList.toggle('open')">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 2.5h11M1 6.5h11M1 10.5h11"/></svg>
+        </button>
+        <div style="flex:1">
+          <div class="page-title">@ViewData["Title"]</div>
+          <div class="page-sub">ADSATEK / Teknik ve Biyomedikal Çözümler</div>
+        </div>
+      </div>
+      <div class="content-area">
+        @RenderBody()
+      </div>
+    </div>
+  </div>
+  <div id="overlay" class="sidebar-overlay" onclick="document.getElementById('sidebar').classList.remove('open');this.classList.remove('open')"></div>
+}
+else
+{
+  @RenderBody()
+}
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

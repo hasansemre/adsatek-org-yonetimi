@@ -1,0 +1,36 @@
+@model List<UserListItemViewModel>
+@{ ViewData["Title"] = "Kullanıcılar"; var userCount = (int)ViewBag.UserCount; }
+
+<div class="section-header">
+  <div>
+    <h2>Kullanıcılar</h2>
+    <div class="section-sub">@userCount kullanıcı</div>
+  </div>
+  <a class="btn-primary" href="/Kullanicilar/Ekle">+ Yeni Kullanıcı</a>
+</div>
+
+<div class="card">
+  <table class="tbl">
+    <thead><tr><th>Ad Soyad</th><th>E-Posta</th><th>Rol</th><th>Departman</th><th>Durum</th><th></th></tr></thead>
+    <tbody>
+      @foreach (var u in Model)
+      {
+        var roleClass = u.Role == "Admin" ? "role-admin" : u.Role == "Yonetici" ? "role-yonetici" : "role-calisan";
+        <tr>
+          <td style="font-weight:600;color:var(--text0)">@u.FullName</td>
+          <td>@u.Email</td>
+          <td><span class="role-pill @roleClass">@u.Role</span></td>
+          <td>@(u.DepartmentAd ?? "-")</td>
+          <td><span class="@(u.IsActive ? "badge-active" : "badge-inactive")">@(u.IsActive ? "Aktif" : "Pasif")</span></td>
+          <td style="text-align:right">
+            <a class="btn-sm blue" href="/Kullanicilar/Duzenle/@u.Id">Düzenle</a>
+            <form asp-action="AktifDegistir" asp-route-id="@u.Id" method="post" style="display:inline">
+              @Html.AntiForgeryToken()
+              <button class="btn-sm @(u.IsActive ? "red" : "green")" type="submit">@(u.IsActive ? "Pasif Yap" : "Aktif Yap")</button>
+            </form>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
