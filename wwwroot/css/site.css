@@ -1,6 +1,8 @@
-/* OrgYonetimi - Dark Theme CSS */
+/* OrgYonetimi - Theme CSS */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
+
+/* Karanlık Tema (varsayılan) */
+:root, [data-theme="dark"] {
   --bg0:#0a0c10;--bg1:#0f1318;--bg2:#161b24;--bg3:#1e2535;
   --border:#2a3347;--border2:#374259;
   --accent:#2563eb;--accent2:#3b82f6;--accent-glow:rgba(37,99,235,0.18);
@@ -9,7 +11,53 @@
   --success-bg:rgba(22,163,74,0.12);--warning-bg:rgba(217,119,6,0.12);
   --danger-bg:rgba(220,38,38,0.12);--info-bg:rgba(37,99,235,0.12);
   --sidebar-w:230px;--topbar-h:56px;
+  --shadow:0 1px 3px rgba(0,0,0,.4);
+  --green:#22c55e;--red:#ef4444;--yellow:#eab308;
 }
+
+/* Aydınlık Tema */
+[data-theme="light"] {
+  --bg0:#f0f2f5;--bg1:#ffffff;--bg2:#f7f8fa;--bg3:#ebedf0;
+  --border:#d1d5db;--border2:#b0b7c3;
+  --accent:#2563eb;--accent2:#3b82f6;--accent-glow:rgba(37,99,235,0.10);
+  --gold:#a87d2a;--gold2:#c9a84c;
+  --text0:#111827;--text1:#374151;--text2:#6b7280;--text3:#9ca3af;
+  --success-bg:rgba(22,163,74,0.08);--warning-bg:rgba(217,119,6,0.08);
+  --danger-bg:rgba(220,38,38,0.08);--info-bg:rgba(37,99,235,0.08);
+  --shadow:0 1px 3px rgba(0,0,0,.1);
+  --green:#16a34a;--red:#dc2626;--yellow:#ca8a04;
+}
+
+/* Light tema tag renk düzeltmeleri */
+[data-theme="light"] .t-blue{color:#1d4ed8}
+[data-theme="light"] .t-green{color:#15803d}
+[data-theme="light"] .t-yellow{color:#a16207}
+[data-theme="light"] .t-red{color:#b91c1c}
+[data-theme="light"] .t-purple{color:#7c3aed}
+[data-theme="light"] .t-gold{color:#92400e}
+[data-theme="light"] .t-gray{color:#4b5563}
+[data-theme="light"] .role-admin{color:#92400e}
+[data-theme="light"] .role-yonetici{color:#1d4ed8}
+[data-theme="light"] .role-calisan{color:#4b5563}
+[data-theme="light"] .badge-active{color:#15803d}
+[data-theme="light"] .badge-inactive{color:#b91c1c}
+[data-theme="light"] select.f-input option{background:#fff;color:#374151}
+[data-theme="light"] .priority-kritik{color:#dc2626}
+[data-theme="light"] .priority-yuksek{color:#ca8a04}
+[data-theme="light"] .priority-normal{color:#2563eb}
+[data-theme="light"] .status-bekliyor{color:#a16207}
+[data-theme="light"] .status-devam{color:#1d4ed8}
+[data-theme="light"] .status-tamamlandi{color:#15803d}
+[data-theme="light"] .status-gecikti{color:#b91c1c}
+[data-theme="light"] .metric-card{background:var(--bg1)}
+[data-theme="light"] .m-value{color:var(--text0)}
+[data-theme="light"] .sidebar::after{opacity:.2}
+[data-theme="light"] ::-webkit-scrollbar-track{background:#f0f0f0}
+[data-theme="light"] ::-webkit-scrollbar-thumb{background:#c0c0c0}
+
+/* Tema toggle butonu */
+.theme-toggle{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--text2);cursor:pointer;transition:all .15s;flex-shrink:0}
+.theme-toggle:hover{background:var(--bg3);color:var(--text0);border-color:var(--border2)}
 body { font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg0);color:var(--text1);min-height:100vh; }
 ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg1)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
 .app-shell{display:flex;height:100vh;overflow:hidden}

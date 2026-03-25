@@ -55,9 +55,25 @@
           <option value="">-- Seçiniz --</option>
           @if (tedarikFirmalar != null)
           {
-            @foreach (var f in tedarikFirmalar)
+            var tedTedarikci = tedarikFirmalar.Where(f => f.Tip == "tedarikci").ToList();
+            var tedTemsilci = tedarikFirmalar.Where(f => f.Tip == "temsilci").ToList();
+            if (tedTedarikci.Any())
             {
-              <option value="@f.Id">@f.Ad</option>
+              <optgroup label="Tedarikçi Firmalar">
+                @foreach (var f in tedTedarikci)
+                {
+                  <option value="@f.Id">@f.Ad</option>
+                }
+              </optgroup>
+            }
+            if (tedTemsilci.Any())
+            {
+              <optgroup label="Temsilci Firmalar">
+                @foreach (var f in tedTemsilci)
+                {
+                  <option value="@f.Id">@f.Ad</option>
+                }
+              </optgroup>
             }
           }
         </select>
@@ -69,9 +85,25 @@
           <option value="">-- Seçiniz (Opsiyonel) --</option>
           @if (temsilciFirmalar != null)
           {
-            @foreach (var f in temsilciFirmalar)
+            var temTedarikci = temsilciFirmalar.Where(f => f.Tip == "tedarikci").ToList();
+            var temTemsilci = temsilciFirmalar.Where(f => f.Tip == "temsilci").ToList();
+            if (temTemsilci.Any())
             {
-              <option value="@f.Id">@f.Ad</option>
+              <optgroup label="Temsilci Firmalar">
+                @foreach (var f in temTemsilci)
+                {
+                  <option value="@f.Id">@f.Ad</option>
+                }
+              </optgroup>
+            }
+            if (temTedarikci.Any())
+            {
+              <optgroup label="Tedarikçi Firmalar">
+                @foreach (var f in temTedarikci)
+                {
+                  <option value="@f.Id">@f.Ad</option>
+                }
+              </optgroup>
             }
           }
         </select>

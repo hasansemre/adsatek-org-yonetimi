@@ -2,6 +2,10 @@
 @{ Layout = "_Layout"; ViewData["Title"] = "Giriş"; }
 
 <div class="login-page">
+  <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Tema Değiştir" style="position:fixed;top:16px;right:16px;z-index:10">
+    <svg id="themeIconMoon2" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M13.5 8.5a5.5 5.5 0 1 1-6-6 4.5 4.5 0 0 0 6 6z"/></svg>
+    <svg id="themeIconSun2" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" style="display:none"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"/></svg>
+  </button>
   <div class="login-box">
     <div class="login-title" style="color:#2dd4bf;letter-spacing:.15em">ADSATEK</div>
     <div class="login-sub">Teknik ve Biyomedikal Çözümler</div>

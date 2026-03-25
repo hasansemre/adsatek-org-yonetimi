@@ -99,8 +99,9 @@ public class TedarikController : Controller
     private async Task LoadDropdownsAsync()
     {
         ViewBag.StokKartlari = await _stokService.GetAllAsync();
-        ViewBag.TedarikFirmalar = await _firmaService.GetByTipAsync("tedarikci");
-        ViewBag.TemsilciFirmalar = await _firmaService.GetByTipAsync("temsilci");
+        var allFirmalar = await _firmaService.GetAllAsync();
+        ViewBag.TedarikFirmalar = allFirmalar; // Tüm firmalar tedarikçi olarak seçilebilir
+        ViewBag.TemsilciFirmalar = allFirmalar; // Tüm firmalar temsilci olarak seçilebilir
         ViewBag.Projeler = await _projectService.GetAllAsync();
     }
 }
