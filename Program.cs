@@ -9,25 +9,38 @@ AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Railway PORT desteği - builder aşamasında ayarla
+var port = Environment.GetEnvironmentVariable("PORT") ?? "5123";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+
 // MVC
 builder.Services.AddControllersWithViews();
 
 // PostgreSQL + EF Core
 var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL")
-    ?? Environment.GetEnvironmentVariable("DATABASE_PRIVATE_URL");
+    ?? Environment.GetEnvironmentVariable("DATABASE_PRIVATE_URL")
+    ?? Environment.GetEnvironmentVariable("DATABASE_PUBLIC_URL");
 string connectionString;
 if (!string.IsNullOrEmpty(databaseUrl))
 {
     // Railway PostgreSQL URL formatını Npgsql formatına dönüştür
-    // postgresql://user:pass@host:port/db -> Host=host;Port=port;Database=db;Username=user;Password=pass
-    var uri = new Uri(databaseUrl);
-    var userInfo = uri.UserInfo.Split(':');
-    connectionString = $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Require;Trust Server Certificate=true";
+    try
+    {
+        var uri = new Uri(databaseUrl);
+        var userInfo = uri.UserInfo.Split(':');
+        connectionString = $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Prefer;Trust Server Certificate=true";
+    }
+    catch
+    {
+        // URL zaten Npgsql formatında olabilir
+        connectionString = databaseUrl;
+    }
 }
 else
 {
     connectionString = builder.Configuration.GetConnectionString("DefaultConnection")!;
 }
+Console.WriteLine($"[DB] Connection target: {(string.IsNullOrEmpty(databaseUrl) ? "local appsettings" : "DATABASE_URL env")}");
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
@@ -83,6 +96,4 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Account}/{action=Index}/{id?}");
 
-// Railway PORT desteği
-var port = Environment.GetEnvironmentVariable("PORT") ?? "5123";
-app.Run($"http://0.0.0.0:{port}");
+app.Run();
